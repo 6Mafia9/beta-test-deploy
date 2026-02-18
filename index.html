@@ -1,0 +1,1717 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+<title>YTBulkUploader BETA</title>
+<link rel="icon" type="image/png" href="/yt-icon.png"/>
+<link href="https://fonts.googleapis.com/css2?family=Syne:wght@600;700;800&family=IBM+Plex+Mono:wght@400;500;600&family=Plus+Jakarta+Sans:wght@400;500;600;700&display=swap" rel="stylesheet"/>
+<style>
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+:root{
+  --bg:#050510;--bg1:#08081e;--bg2:#0d0d28;--bg3:#121232;
+  --surf:rgba(255,255,255,.033);--surf-b:rgba(255,255,255,.065);
+  --p:#6d28d9;--p1:#7c3aed;--p2:#8b5cf6;--p3:#a78bfa;
+  --b1:#1d4ed8;--b2:#3b82f6;--b3:#93c5fd;
+  --c1:#0891b2;--c2:#22d3ee;
+  --green:#059669;--green2:#10b981;--green3:#34d399;
+  --red:#dc2626;--red2:#f87171;--amber:#d97706;--amber2:#fbbf24;
+  --t1:#ececff;--t2:#7878aa;--t3:#3a3a58;
+  --gp:rgba(109,40,217,.5);--gb:rgba(29,78,216,.4);
+  --border:rgba(255,255,255,.058);
+  --nav-w:220px;--nav-h:54px;
+}
+html,body{height:100%;overflow:hidden}
+body{background:var(--bg);color:var(--t1);font-family:'Plus Jakarta Sans',sans-serif;font-size:13.5px;line-height:1.55;}
+body::before{content:'';position:fixed;inset:0;background-image:linear-gradient(rgba(109,40,217,.04) 1px,transparent 1px),linear-gradient(90deg,rgba(109,40,217,.04) 1px,transparent 1px);background-size:44px 44px;pointer-events:none;z-index:0;}
+.orb{position:fixed;border-radius:50%;filter:blur(90px);pointer-events:none;z-index:0;}
+.orb-a{width:520px;height:520px;background:radial-gradient(circle,#6d28d9,transparent 65%);top:-180px;left:-120px;opacity:.13;}
+.orb-b{width:440px;height:440px;background:radial-gradient(circle,#1d4ed8,transparent 65%);bottom:-80px;right:-80px;opacity:.11;}
+
+/* PAGES */
+.page{position:fixed;inset:0;z-index:10;opacity:0;pointer-events:none;transition:opacity .3s ease;}
+.page.active{opacity:1;pointer-events:all;}
+
+/* LOGIN */
+#pg-login{display:flex;align-items:center;justify-content:center;}
+.login-card{
+  position:relative;z-index:2;width:400px;
+  background:rgba(8,8,30,.92);border:1px solid rgba(109,40,217,.22);border-radius:22px;padding:44px 40px;
+  backdrop-filter:blur(40px);
+  box-shadow:0 32px 80px rgba(0,0,0,.6),0 0 0 1px rgba(255,255,255,.03),0 0 50px rgba(109,40,217,.08);
+}
+.login-card::before{content:'';position:absolute;top:0;left:10%;right:10%;height:1px;background:linear-gradient(90deg,transparent,var(--p2),transparent);border-radius:1px;}
+.lc-logo{display:flex;align-items:center;gap:9px;margin-bottom:30px;}
+.lc-mark{width:36px;height:36px;border-radius:9px;background:linear-gradient(135deg,var(--p1),var(--b1));display:flex;align-items:center;justify-content:center;box-shadow:0 0 20px var(--gp);}
+.lc-name{font-family:'Syne',sans-serif;font-size:1.05rem;font-weight:800;letter-spacing:.05em;}
+.lc-name span{opacity:.35;font-weight:600;}
+.lc-beta{margin-left:auto;font-family:'IBM Plex Mono',monospace;font-size:.58rem;font-weight:600;letter-spacing:.14em;text-transform:uppercase;padding:3px 9px;border-radius:100px;background:rgba(109,40,217,.18);border:1px solid rgba(109,40,217,.38);color:var(--p3);animation:betapulse 2.5s ease-in-out infinite;}
+@keyframes betapulse{0%,100%{box-shadow:0 0 5px rgba(109,40,217,.3)}50%{box-shadow:0 0 16px rgba(109,40,217,.65)}}
+.lc-h{font-family:'Syne',sans-serif;font-size:1.5rem;font-weight:800;line-height:1.15;margin-bottom:6px;}
+.lc-p{font-size:.84rem;color:var(--t2);margin-bottom:28px;line-height:1.65;}
+.oauth-btn{width:100%;display:flex;align-items:center;justify-content:center;gap:11px;background:#fff;color:#1a1a1a;border:none;padding:13px 20px;border-radius:11px;font-family:'Plus Jakarta Sans',sans-serif;font-weight:700;font-size:.9rem;cursor:pointer;letter-spacing:.01em;transition:transform .15s,box-shadow .15s;box-shadow:0 4px 20px rgba(0,0,0,.4);}
+.oauth-btn:hover{background:#f8f8f8;transform:translateY(-2px);box-shadow:0 8px 28px rgba(0,0,0,.5);}
+.oauth-btn:disabled{opacity:.6;cursor:not-allowed;transform:none;}
+.g-icon{width:18px;height:18px;flex-shrink:0;}
+.lc-note{margin-top:22px;padding-top:18px;border-top:1px solid var(--border);font-size:.72rem;color:var(--t3);text-align:center;line-height:1.65;}
+
+/* APP SHELL */
+#pg-app{display:flex;flex-direction:column;}
+.topnav{height:var(--nav-h);flex-shrink:0;display:flex;align-items:center;padding:0 20px 0 16px;gap:12px;background:rgba(5,5,16,.82);backdrop-filter:blur(22px);border-bottom:1px solid var(--border);position:relative;z-index:50;}
+.tn-logo{display:flex;align-items:center;gap:8px;width:var(--nav-w);flex-shrink:0;}
+.tn-mark{width:28px;height:28px;border-radius:7px;display:flex;align-items:center;justify-content:center;flex-shrink:0;overflow:hidden;background:transparent;box-shadow:none;}
+.tn-name{font-family:'Syne',sans-serif;font-size:.88rem;font-weight:800;letter-spacing:.05em;}
+.tn-name em{opacity:.3;font-style:normal;font-weight:600;}
+.tn-mid{flex:1;display:flex;align-items:center;}
+.tn-status{display:flex;align-items:center;gap:7px;font-family:'IBM Plex Mono',monospace;font-size:.68rem;color:var(--t2);}
+.tn-dot{width:6px;height:6px;border-radius:50%;background:var(--green3);box-shadow:0 0 7px var(--green3);animation:blink 2s ease-in-out infinite;}
+@keyframes blink{0%,100%{opacity:1}50%{opacity:.35}}
+.tn-sep{color:var(--t3);}
+.tn-right{margin-left:auto;display:flex;align-items:center;gap:10px;}
+.avatar-pill{display:flex;align-items:center;gap:7px;background:var(--surf);border:1px solid var(--surf-b);border-radius:9px;padding:4px 10px 4px 4px;cursor:pointer;transition:border-color .2s;}
+.avatar-pill:hover{border-color:rgba(109,40,217,.35);}
+.av{width:26px;height:26px;border-radius:6px;display:flex;align-items:center;justify-content:center;overflow:hidden;background:transparent;}
+.av-name{font-size:.76rem;font-weight:600;}
+.brand-icon{width:100%;height:100%;display:block;object-fit:cover;}
+
+.app-body{display:flex;flex:1;overflow:hidden;}
+
+/* SIDEBAR */
+.sidebar{width:var(--nav-w);flex-shrink:0;background:rgba(5,5,16,.7);border-right:1px solid var(--border);display:flex;flex-direction:column;padding:12px 0 20px;}
+.snav{list-style:none;display:flex;flex-direction:column;gap:1px;padding:0 8px;}
+.sn{display:flex;align-items:center;gap:9px;padding:9px 12px;border-radius:8px;cursor:pointer;font-size:.82rem;font-weight:500;color:var(--t2);transition:background .15s,color .15s;border:1px solid transparent;}
+.sn:hover{background:rgba(109,40,217,.07);color:var(--t1);}
+.sn.active{background:rgba(109,40,217,.12);color:var(--p3);border-color:rgba(109,40,217,.18);}
+.sn-sub{padding-left:18px;color:var(--t2);}
+.sn-ico{font-size:.9rem;width:18px;text-align:center;flex-shrink:0;}
+.sn-badge{margin-left:auto;font-family:'IBM Plex Mono',monospace;font-size:.58rem;font-weight:700;background:var(--p1);color:#fff;padding:1px 6px;border-radius:100px;min-width:18px;text-align:center;}
+.sb-divider{height:1px;background:var(--border);margin:10px 12px;}
+.sb-bottom{margin-top:auto;padding:0 8px;}
+.sn-logout{display:flex;align-items:center;gap:9px;padding:9px 12px;border-radius:8px;cursor:pointer;font-size:.82rem;font-weight:500;color:var(--t3);background:none;border:none;width:100%;font-family:'Plus Jakarta Sans',sans-serif;transition:background .15s,color .15s;}
+.sn-logout:hover{background:rgba(244,63,94,.08);color:var(--red2);}
+
+/* SOCIAL LINKS */
+.socials-row{display:flex;align-items:center;gap:6px;padding:0 8px;margin-bottom:8px;}
+.soc-btn{
+  flex:1;display:flex;align-items:center;justify-content:center;
+  height:30px;border-radius:7px;border:1px solid var(--border);
+  background:rgba(255,255,255,.025);cursor:pointer;
+  text-decoration:none;font-size:.8rem;
+  transition:background .15s,border-color .15s,transform .15s,box-shadow .15s;
+  color:var(--t2);
+}
+.soc-btn:hover{transform:translateY(-2px);}
+.soc-btn.discord:hover{border-color:rgba(88,101,242,.5);background:rgba(88,101,242,.12);box-shadow:0 0 12px rgba(88,101,242,.25);color:#7289da;}
+.soc-btn.youtube:hover{border-color:rgba(255,0,0,.4);background:rgba(255,0,0,.1);box-shadow:0 0 12px rgba(255,0,0,.2);color:#ff4444;}
+.soc-btn.twitter:hover{border-color:rgba(255,255,255,.25);background:rgba(255,255,255,.07);box-shadow:0 0 12px rgba(255,255,255,.08);color:#e7e7e7;}
+
+/* THEME SWITCHER */
+.theme-row{display:flex;align-items:center;gap:5px;padding:0 8px;margin-bottom:6px;}
+.theme-lbl{font-family:'IBM Plex Mono',monospace;font-size:.58rem;letter-spacing:.1em;text-transform:uppercase;color:var(--t3);margin-right:2px;flex-shrink:0;}
+.theme-dot{
+  width:22px;height:22px;border-radius:6px;cursor:pointer;flex-shrink:0;
+  border:2px solid transparent;transition:transform .15s,border-color .15s,box-shadow .15s;
+}
+.theme-dot:hover{transform:scale(1.15);}
+.theme-dot.active-th{border-color:rgba(255,255,255,.5)!important;box-shadow:0 0 8px rgba(255,255,255,.2);}
+.th-purple{background:linear-gradient(135deg,#6d28d9,#1d4ed8);}
+.th-cyan{background:linear-gradient(135deg,#0e7490,#0891b2);}
+.th-green{background:linear-gradient(135deg,#065f46,#0d9488);}
+.th-red{background:linear-gradient(135deg,#991b1b,#c2410c);}
+.th-gold{background:linear-gradient(135deg,#78350f,#b45309);}
+
+/* THEME: CYAN */
+body.theme-cyan{
+  --p:#0e7490;--p1:#0891b2;--p2:#06b6d4;--p3:#67e8f9;
+  --b1:#0369a1;--b2:#0ea5e9;--b3:#7dd3fc;
+  --gp:rgba(8,145,178,.5);--gb:rgba(3,105,161,.4);
+}
+body.theme-cyan .orb-a{background:radial-gradient(circle,#0891b2,transparent 65%);}
+body.theme-cyan .orb-b{background:radial-gradient(circle,#0369a1,transparent 65%);}
+body.theme-cyan body::before{background-image:linear-gradient(rgba(6,182,212,.04) 1px,transparent 1px),linear-gradient(90deg,rgba(6,182,212,.04) 1px,transparent 1px);}
+body.theme-cyan .lc-beta{background:rgba(8,145,178,.18);border-color:rgba(8,145,178,.38);color:var(--p3);}
+@keyframes betapulse-cyan{0%,100%{box-shadow:0 0 5px rgba(8,145,178,.3)}50%{box-shadow:0 0 16px rgba(8,145,178,.65)}}
+
+/* THEME: GREEN */
+body.theme-green{
+  --p:#065f46;--p1:#059669;--p2:#10b981;--p3:#6ee7b7;
+  --b1:#065f46;--b2:#059669;--b3:#6ee7b7;
+  --gp:rgba(5,150,105,.5);--gb:rgba(6,95,70,.4);
+}
+body.theme-green .orb-a{background:radial-gradient(circle,#059669,transparent 65%);}
+body.theme-green .orb-b{background:radial-gradient(circle,#065f46,transparent 65%);}
+
+/* THEME: RED */
+body.theme-red{
+  --p:#991b1b;--p1:#dc2626;--p2:#ef4444;--p3:#fca5a5;
+  --b1:#9a3412;--b2:#ea580c;--b3:#fdba74;
+  --gp:rgba(220,38,38,.5);--gb:rgba(154,52,18,.4);
+}
+body.theme-red .orb-a{background:radial-gradient(circle,#dc2626,transparent 65%);}
+body.theme-red .orb-b{background:radial-gradient(circle,#9a3412,transparent 65%);}
+
+/* THEME: GOLD */
+body.theme-gold{
+  --p:#78350f;--p1:#b45309;--p2:#d97706;--p3:#fcd34d;
+  --b1:#78350f;--b2:#b45309;--b3:#fcd34d;
+  --gp:rgba(180,83,9,.5);--gb:rgba(120,53,15,.4);
+}
+body.theme-gold .orb-a{background:radial-gradient(circle,#b45309,transparent 65%);}
+body.theme-gold .orb-b{background:radial-gradient(circle,#78350f,transparent 65%);}
+
+
+.main{flex:1;display:flex;flex-direction:column;overflow:hidden;}
+.view{display:none;flex:1;flex-direction:column;overflow:hidden;}
+.view.active{display:flex;}
+
+/* VIEW HEADER */
+.view-header{display:flex;align-items:center;justify-content:space-between;padding:14px 24px;flex-shrink:0;border-bottom:1px solid var(--border);background:rgba(5,5,16,.5);backdrop-filter:blur(12px);}
+.vh-title{font-family:'Syne',sans-serif;font-size:.98rem;font-weight:800;letter-spacing:.01em;margin-bottom:1px;}
+.vh-sub{font-size:.73rem;color:var(--t2);}
+.vh-right{display:flex;align-items:center;gap:8px;}
+
+/* BUTTONS */
+.btn{display:inline-flex;align-items:center;justify-content:center;gap:7px;border:none;border-radius:9px;cursor:pointer;font-family:'Plus Jakarta Sans',sans-serif;font-weight:700;transition:transform .15s,box-shadow .15s,opacity .15s;white-space:nowrap;letter-spacing:.01em;}
+.btn-primary{background:linear-gradient(135deg,var(--p1),var(--b1));color:#fff;padding:8px 18px;font-size:.8rem;box-shadow:0 0 18px var(--gp);}
+.btn-primary:hover{transform:translateY(-1px);box-shadow:0 0 28px var(--gp);}
+.btn-primary:disabled{opacity:.38;cursor:not-allowed;transform:none!important;}
+.btn-ghost{background:var(--surf);border:1px solid var(--surf-b);color:var(--t2);padding:7px 14px;font-size:.8rem;}
+.btn-ghost:hover{border-color:rgba(255,255,255,.14);color:var(--t1);}
+.btn-danger{background:rgba(220,38,38,.1);border:1px solid rgba(220,38,38,.22);color:var(--red2);padding:7px 14px;font-size:.8rem;}
+.btn-danger:hover{background:rgba(220,38,38,.18);}
+.btn-sm{padding:6px 12px!important;font-size:.74rem!important;}
+
+/* ═══ UPLOAD VIEW ═══ */
+.upload-body{flex:1;display:flex;gap:0;overflow:hidden;min-height:0;}
+.upload-left{flex:1;display:flex;flex-direction:column;overflow:hidden;border-right:1px solid var(--border);min-height:0;}
+.dz-wrap{padding:16px 20px;flex-shrink:0;}
+.dropzone{border:1.5px dashed rgba(109,40,217,.3);border-radius:13px;padding:26px 20px;text-align:center;background:rgba(109,40,217,.03);cursor:pointer;transition:border-color .2s,background .2s,box-shadow .2s;position:relative;overflow:hidden;}
+.dropzone::after{content:'';position:absolute;inset:0;background:radial-gradient(ellipse at 50% 100%,rgba(109,40,217,.07),transparent 70%);pointer-events:none;}
+.dropzone:hover,.dropzone.over{border-color:rgba(109,40,217,.65);background:rgba(109,40,217,.07);box-shadow:0 0 28px rgba(109,40,217,.12),inset 0 0 28px rgba(109,40,217,.04);}
+.dz-icon{font-size:1.8rem;margin-bottom:7px;}
+.dz-t{font-family:'Syne',sans-serif;font-size:.9rem;font-weight:700;margin-bottom:3px;}
+.dz-s{font-size:.74rem;color:var(--t2);margin-bottom:10px;}
+.dz-fmts{display:flex;justify-content:center;gap:5px;flex-wrap:wrap;}
+.dz-fmt{font-family:'IBM Plex Mono',monospace;font-size:.6rem;background:rgba(255,255,255,.045);border:1px solid rgba(255,255,255,.08);padding:2px 7px;border-radius:4px;color:var(--t2);}
+
+/* QUEUE */
+.q-wrap{flex:1;display:flex;flex-direction:column;overflow:hidden;min-height:0;}
+.q-head{display:flex;align-items:center;justify-content:space-between;padding:10px 20px;flex-shrink:0;border-bottom:1px solid var(--border);}
+.q-title{display:flex;align-items:center;gap:8px;font-family:'Syne',sans-serif;font-size:.82rem;font-weight:700;}
+.q-pill{font-family:'IBM Plex Mono',monospace;font-size:.58rem;font-weight:700;background:rgba(109,40,217,.2);border:1px solid rgba(109,40,217,.32);padding:2px 7px;border-radius:100px;color:var(--p3);}
+.q-link{font-size:.74rem;color:var(--t3);cursor:pointer;background:none;border:none;font-family:'Plus Jakarta Sans',sans-serif;transition:color .15s;}
+.q-link:hover{color:var(--t2);}
+.q-list{flex:1;overflow-y:auto;padding:10px 16px 16px;display:flex;flex-direction:column;gap:5px;min-height:0;}
+.q-list::-webkit-scrollbar{width:4px;}
+.q-list::-webkit-scrollbar-thumb{background:rgba(109,40,217,.28);border-radius:100px;}
+.q-empty{flex:1;display:flex;flex-direction:column;align-items:center;justify-content:center;color:var(--t3);text-align:center;padding:40px;gap:8px;}
+.qe-icon{font-size:2.2rem;opacity:.35;}
+.qe-t{font-family:'Syne',sans-serif;font-size:.88rem;font-weight:700;color:var(--t2);}
+
+/* VIDEO ROW */
+.vrow{background:rgba(255,255,255,.025);border:1px solid var(--border);border-radius:11px;padding:9px 11px;display:flex;flex-direction:column;gap:7px;transition:border-color .2s;position:relative;overflow:hidden;animation:slideUp .22s ease both;flex-shrink:0;}
+@keyframes slideUp{from{opacity:0;transform:translateY(10px)}to{opacity:1;transform:translateY(0)}}
+.vrow::before{content:'';position:absolute;left:0;top:0;bottom:0;width:2px;border-radius:1px;transition:background .2s;}
+.vrow.st-done::before{background:var(--green3);}
+.vrow.st-uploading::before{background:var(--b2);}
+.vrow.st-error::before{background:var(--red2);}
+.vrow:hover{border-color:rgba(109,40,217,.22);}
+.vrow.st-uploading{border-color:rgba(59,130,246,.18);box-shadow:0 0 16px rgba(59,130,246,.06);}
+.vrow.st-done{border-color:rgba(52,211,153,.13);}
+.vrow-main{display:flex;align-items:center;gap:9px;}
+.vthumb{width:46px;height:30px;border-radius:5px;flex-shrink:0;display:flex;align-items:center;justify-content:center;font-size:.75rem;}
+.tc1{background:linear-gradient(135deg,#1a1040,#2a1555);}
+.tc2{background:linear-gradient(135deg,#0a1f40,#1a3f5f);}
+.tc3{background:linear-gradient(135deg,#1a2a10,#2a3f1a);}
+.tc4{background:linear-gradient(135deg,#2a1510,#401a10);}
+.tc5{background:linear-gradient(135deg,#101a2a,#1a2a40);}
+.vinfo{flex:1;min-width:0;}
+.vname{font-size:.78rem;font-weight:600;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;margin-bottom:1px;cursor:text;}
+.vname-edit{width:100%;max-width:100%;font-size:.78rem;font-weight:600;background:rgba(109,40,217,.12);border:1px solid rgba(109,40,217,.35);border-radius:6px;padding:2px 6px;color:var(--t1);outline:none;}
+.vname-edit:focus{border-color:var(--p3);box-shadow:0 0 0 2px rgba(109,40,217,.2);}
+.vmeta{display:flex;align-items:center;gap:6px;font-family:'IBM Plex Mono',monospace;font-size:.6rem;color:var(--t2);}
+.vm-sep{color:var(--t3);}
+.vrow-right{display:flex;align-items:center;gap:7px;flex-shrink:0;}
+.priv-wrap{position:relative;display:flex;align-items:center;}
+.priv-sel{appearance:none;background:rgba(255,255,255,.04);border:1px solid rgba(255,255,255,.08);border-radius:6px;padding:3px 20px 3px 8px;font-family:'IBM Plex Mono',monospace;font-size:.6rem;font-weight:600;letter-spacing:.04em;text-transform:uppercase;cursor:pointer;outline:none;transition:border-color .2s;color:var(--t2);}
+.priv-sel.pub{color:var(--green3);border-color:rgba(52,211,153,.22);}
+.priv-sel.unl{color:var(--b3);border-color:rgba(147,197,253,.18);}
+.priv-sel.pri{color:var(--red2);border-color:rgba(248,113,113,.18);}
+.priv-sel option{background:#0d0d28;color:var(--t1);}
+.priv-arr{position:absolute;right:5px;pointer-events:none;font-size:.5rem;color:var(--t3);}
+.stbadge{display:flex;align-items:center;gap:4px;font-family:'IBM Plex Mono',monospace;font-size:.6rem;font-weight:600;letter-spacing:.04em;padding:2px 7px;border-radius:5px;white-space:nowrap;}
+.stb-q{background:rgba(255,255,255,.05);color:var(--t3);}
+.stb-u{background:rgba(59,130,246,.14);color:var(--b3);border:1px solid rgba(59,130,246,.22);}
+.stb-d{background:rgba(16,185,129,.12);color:var(--green3);border:1px solid rgba(16,185,129,.2);}
+.stb-e{background:rgba(220,38,38,.12);color:var(--red2);border:1px solid rgba(220,38,38,.2);}
+.std{width:5px;height:5px;border-radius:50%;flex-shrink:0;}
+.stb-q .std{background:var(--t3);}
+.stb-u .std{background:var(--b2);box-shadow:0 0 5px var(--b2);animation:blink .9s infinite;}
+.stb-d .std{background:var(--green3);box-shadow:0 0 5px var(--green3);}
+.stb-e .std{background:var(--red2);box-shadow:0 0 5px var(--red2);}
+.vrem{width:20px;height:20px;border-radius:5px;background:none;border:none;color:var(--t3);cursor:pointer;display:flex;align-items:center;justify-content:center;font-size:.72rem;transition:background .15s,color .15s;}
+.vrem:hover{background:rgba(244,63,94,.1);color:var(--red2);}
+.vprog{display:flex;align-items:center;gap:8px;}
+.vpb{flex:1;height:3px;background:rgba(255,255,255,.07);border-radius:100px;overflow:hidden;}
+.vpbf{height:100%;border-radius:100px;background:linear-gradient(90deg,var(--p1),var(--b2),var(--c2));transition:width .25s ease;}
+.vpbf.done{background:linear-gradient(90deg,var(--green),var(--green3));}
+.vpct{font-family:'IBM Plex Mono',monospace;font-size:.6rem;color:var(--t2);width:30px;text-align:right;flex-shrink:0;}
+.vspd{font-family:'IBM Plex Mono',monospace;font-size:.58rem;color:var(--t3);flex-shrink:0;width:56px;text-align:right;}
+.vtags{display:flex;align-items:center;gap:5px;flex-wrap:wrap;}
+.vtag{font-family:'IBM Plex Mono',monospace;font-size:.57rem;letter-spacing:.03em;padding:1px 6px;border-radius:4px;}
+.vt-title{background:rgba(109,40,217,.1);color:var(--p3);border:1px solid rgba(109,40,217,.18);}
+.vt-kids{background:rgba(16,185,129,.1);color:var(--green3);border:1px solid rgba(16,185,129,.16);}
+.vt-tmpl{background:rgba(59,130,246,.1);color:var(--b3);border:1px solid rgba(59,130,246,.15);}
+
+/* RIGHT PANEL */
+.upload-right{width:256px;flex-shrink:0;display:flex;flex-direction:column;overflow-y:auto;}
+.upload-right::-webkit-scrollbar{width:3px;}
+.upload-right::-webkit-scrollbar-thumb{background:rgba(109,40,217,.25);border-radius:100px;}
+.rp{padding:14px 16px;border-bottom:1px solid var(--border);}
+.rp-lbl{font-family:'IBM Plex Mono',monospace;font-size:.58rem;letter-spacing:.12em;text-transform:uppercase;color:var(--t3);margin-bottom:10px;}
+.tmpl-btn{width:100%;display:flex;align-items:center;gap:8px;background:rgba(109,40,217,.08);border:1px solid rgba(109,40,217,.25);border-radius:9px;padding:8px 11px;cursor:pointer;font-family:'Plus Jakarta Sans',sans-serif;font-size:.78rem;font-weight:600;color:var(--p3);transition:border-color .2s,background .2s;}
+.tmpl-btn:hover{border-color:rgba(109,40,217,.45);background:rgba(109,40,217,.14);}
+.tb-arr{margin-left:auto;font-size:.55rem;color:var(--t3);transition:transform .2s;}
+.tmpl-open .tb-arr{transform:rotate(180deg);}
+.tmpl-drop{position:relative;z-index:60;background:rgba(8,8,30,.98);border:1px solid rgba(109,40,217,.22);border-radius:10px;padding:6px;margin-top:6px;box-shadow:0 16px 40px rgba(0,0,0,.55),0 0 24px rgba(109,40,217,.08);display:none;}
+.tmpl-drop.open{display:block;}
+.td-item{display:flex;align-items:center;gap:8px;padding:8px 10px;border-radius:7px;cursor:pointer;border:1px solid transparent;transition:background .15s;}
+.td-item:hover{background:rgba(109,40,217,.08);}
+.td-item.sel{background:rgba(109,40,217,.1);border-color:rgba(109,40,217,.22);}
+.tdi-ico{font-size:.9rem;flex-shrink:0;}
+.tdi-name{font-size:.78rem;font-weight:600;color:var(--t1);}
+.tdi-sub{font-size:.66rem;color:var(--t2);}
+.tdi-chk{margin-left:auto;color:var(--p2);font-size:.65rem;}
+.td-manage{display:flex;align-items:center;gap:7px;padding:7px 10px;border-radius:7px;cursor:pointer;font-size:.76rem;color:var(--t2);border-top:1px solid var(--border);margin-top:4px;padding-top:10px;transition:color .15s;}
+.td-manage:hover{color:var(--t1);}
+.stats-row{display:grid;grid-template-columns:1fr 1fr 1fr;gap:7px;margin-bottom:8px;}
+.stat{background:rgba(255,255,255,.025);border:1px solid var(--border);border-radius:9px;padding:9px 11px;}
+.stat-v{font-family:'Syne',sans-serif;font-size:1.35rem;font-weight:800;line-height:1;margin-bottom:1px;}
+.sv-p{color:var(--p3);}.sv-b{color:var(--b3);}.sv-g{color:var(--green3);}
+.stat-l{font-family:'IBM Plex Mono',monospace;font-size:.57rem;color:var(--t3);letter-spacing:.06em;}
+.overall{background:rgba(255,255,255,.025);border:1px solid var(--border);border-radius:9px;padding:11px;}
+.ov-head{display:flex;align-items:center;justify-content:space-between;margin-bottom:7px;}
+.ov-label{font-size:.76rem;font-weight:600;}
+.ov-pct{font-family:'Syne',sans-serif;font-size:.88rem;font-weight:800;color:var(--p3);}
+.ov-bar{height:5px;background:rgba(255,255,255,.07);border-radius:100px;overflow:hidden;margin-bottom:6px;}
+.ov-fill{height:100%;border-radius:100px;background:linear-gradient(90deg,var(--p1),var(--b2),var(--c2));box-shadow:0 0 8px var(--gp);transition:width .4s ease;}
+.ov-meta{display:flex;justify-content:space-between;font-family:'IBM Plex Mono',monospace;font-size:.6rem;color:var(--t2);}
+.log-section{flex:1;display:flex;flex-direction:column;overflow:hidden;min-height:100px;}
+.log-head{display:flex;align-items:center;justify-content:space-between;padding:8px 16px;border-bottom:1px solid var(--border);flex-shrink:0;}
+.log-lbl{font-family:'IBM Plex Mono',monospace;font-size:.58rem;letter-spacing:.12em;text-transform:uppercase;color:var(--t3);}
+.log-clr{font-size:.62rem;color:var(--t3);cursor:pointer;background:none;border:none;font-family:'IBM Plex Mono',monospace;transition:color .15s;}
+.log-clr:hover{color:var(--t2);}
+.log-list{flex:1;overflow-y:auto;padding:6px 12px;display:flex;flex-direction:column;gap:1px;}
+.log-list::-webkit-scrollbar{width:3px;}
+.log-list::-webkit-scrollbar-thumb{background:rgba(109,40,217,.2);border-radius:100px;}
+.log-e{display:flex;align-items:flex-start;gap:5px;font-family:'IBM Plex Mono',monospace;font-size:.6rem;line-height:1.5;padding:2px;}
+.le-t{color:var(--t3);flex-shrink:0;}
+.le-m{color:var(--t2);}
+.le-m.ok{color:var(--green2);}.le-m.info{color:var(--b3);}.le-m.warn{color:var(--amber2);}.le-m.err{color:var(--red2);}
+.statusbar{height:22px;flex-shrink:0;display:flex;align-items:center;padding:0 16px;gap:14px;background:rgba(4,4,12,.92);border-top:1px solid var(--border);}
+.sb-chip{display:flex;align-items:center;gap:4px;font-family:'IBM Plex Mono',monospace;font-size:.58rem;color:var(--t3);}
+.sb-chip.ok{color:var(--green2);}.sb-chip.act{color:var(--b3);}
+.sbc-dot{width:5px;height:5px;border-radius:50%;}
+.sbc-g{background:var(--green3);box-shadow:0 0 4px var(--green3);}
+.sbc-b{background:var(--b2);box-shadow:0 0 4px var(--b2);animation:blink .9s infinite;}
+.sbc-gr{background:var(--t3);}
+.sb-sp{flex:1;}
+
+/* ═══ TEMPLATES VIEW ═══ */
+.tmpl-view-body{flex:1;display:flex;gap:0;overflow:hidden;}
+.tlist-pane{width:260px;flex-shrink:0;border-right:1px solid var(--border);display:flex;flex-direction:column;overflow:hidden;}
+.tlist-head{display:flex;align-items:center;justify-content:space-between;padding:12px 16px;border-bottom:1px solid var(--border);flex-shrink:0;}
+.tlist-title{font-family:'Syne',sans-serif;font-size:.82rem;font-weight:800;}
+.tlist{flex:1;overflow-y:auto;padding:8px;display:flex;flex-direction:column;gap:4px;}
+.tlist::-webkit-scrollbar{width:3px;}
+.tlist::-webkit-scrollbar-thumb{background:rgba(109,40,217,.22);border-radius:100px;}
+.tlist-item{display:flex;align-items:center;gap:9px;padding:10px 11px;border-radius:9px;cursor:pointer;border:1px solid transparent;transition:background .15s,border-color .15s;}
+.tlist-item:hover{background:rgba(109,40,217,.07);}
+.tlist-item.active{background:rgba(109,40,217,.12);border-color:rgba(109,40,217,.2);}
+.tli-ico{font-size:1rem;flex-shrink:0;}
+.tli-info{flex:1;min-width:0;}
+.tli-name{font-size:.8rem;font-weight:600;color:var(--t1);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
+.tli-priv{font-family:'IBM Plex Mono',monospace;font-size:.6rem;color:var(--t2);}
+.tli-del{width:20px;height:20px;border-radius:5px;border:none;background:none;color:var(--t3);cursor:pointer;display:flex;align-items:center;justify-content:center;font-size:.7rem;transition:background .15s,color .15s;flex-shrink:0;}
+.tli-del:hover{background:rgba(244,63,94,.1);color:var(--red2);}
+.tedit-pane{flex:1;display:flex;flex-direction:column;overflow:hidden;}
+.tedit-head{display:flex;align-items:center;justify-content:space-between;padding:12px 24px;border-bottom:1px solid var(--border);flex-shrink:0;background:rgba(5,5,16,.5);}
+.tedit-title{font-family:'Syne',sans-serif;font-size:.88rem;font-weight:800;}
+.tedit-body{flex:1;overflow-y:auto;padding:24px;}
+.tedit-body::-webkit-scrollbar{width:4px;}
+.tedit-body::-webkit-scrollbar-thumb{background:rgba(109,40,217,.22);border-radius:100px;}
+.tedit-empty{flex:1;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:10px;color:var(--t3);text-align:center;padding:40px;}
+.form-section{margin-bottom:22px;}
+.form-sec-lbl{font-family:'IBM Plex Mono',monospace;font-size:.6rem;letter-spacing:.12em;text-transform:uppercase;color:var(--t3);margin-bottom:10px;padding-bottom:6px;border-bottom:1px solid var(--border);}
+.form-grid{display:grid;grid-template-columns:1fr 1fr;gap:12px;}
+.fg{display:flex;flex-direction:column;gap:5px;}
+.fg.full{grid-column:1/-1;}
+.fl{font-size:.76rem;font-weight:600;color:var(--t2);}
+.fhint{font-size:.68rem;color:var(--t3);margin-top:2px;}
+.fi{background:rgba(255,255,255,.04);border:1px solid var(--border);border-radius:8px;padding:8px 12px;color:var(--t1);font-family:'Plus Jakarta Sans',sans-serif;font-size:.82rem;outline:none;transition:border-color .2s,box-shadow .2s;width:100%;}
+.fi:focus{border-color:rgba(109,40,217,.5);box-shadow:0 0 0 3px rgba(109,40,217,.1);}
+.fi::placeholder{color:var(--t3);}
+.fi-ta{resize:vertical;min-height:70px;}
+.priv-group{display:flex;gap:6px;}
+.priv-opt{flex:1;display:flex;align-items:center;justify-content:center;gap:5px;padding:7px;border-radius:8px;cursor:pointer;border:1px solid var(--border);font-family:'IBM Plex Mono',monospace;font-size:.65rem;font-weight:600;letter-spacing:.04em;text-transform:uppercase;color:var(--t3);background:rgba(255,255,255,.03);transition:all .15s;}
+.priv-opt:hover{border-color:rgba(255,255,255,.14);color:var(--t2);}
+.po-pub.active{border-color:rgba(52,211,153,.35);background:rgba(52,211,153,.08);color:var(--green3);}
+.po-unl.active{border-color:rgba(147,197,253,.3);background:rgba(147,197,253,.08);color:var(--b3);}
+.po-pri.active{border-color:rgba(248,113,113,.28);background:rgba(248,113,113,.08);color:var(--red2);}
+.toggle-row{display:flex;align-items:center;justify-content:space-between;padding:10px 12px;background:rgba(255,255,255,.025);border:1px solid var(--border);border-radius:9px;}
+.tg-info{}
+.tg-lbl{font-size:.82rem;font-weight:600;margin-bottom:1px;}
+.tg-sub{font-size:.71rem;color:var(--t2);}
+.tg-sw{width:36px;height:20px;border-radius:100px;background:rgba(255,255,255,.1);border:1px solid rgba(255,255,255,.12);cursor:pointer;position:relative;flex-shrink:0;transition:background .2s,border-color .2s;}
+.tg-sw.on{background:var(--p1);border-color:var(--p1);box-shadow:0 0 10px var(--gp);}
+.tg-sw::after{content:'';position:absolute;width:14px;height:14px;border-radius:50%;background:#fff;top:2px;left:2px;transition:transform .2s;box-shadow:0 1px 4px rgba(0,0,0,.3);}
+.tg-sw.on::after{transform:translateX(16px);}
+.tedit-footer{padding:14px 24px;border-top:1px solid var(--border);display:flex;align-items:center;gap:8px;justify-content:flex-end;flex-shrink:0;background:rgba(5,5,16,.5);}
+
+/* ═══ SETTINGS VIEW ═══ */
+.settings-body{flex:1;overflow-y:auto;padding:28px 32px;}
+.settings-body::-webkit-scrollbar{width:4px;}
+.settings-body::-webkit-scrollbar-thumb{background:rgba(109,40,217,.22);border-radius:100px;}
+.set-block{max-width:680px;background:rgba(255,255,255,.025);border:1px solid var(--border);border-radius:14px;padding:22px 24px;margin-bottom:16px;}
+.set-block-title{font-family:'Syne',sans-serif;font-size:.9rem;font-weight:800;margin-bottom:3px;}
+.set-block-sub{font-size:.76rem;color:var(--t2);margin-bottom:16px;}
+.set-divider{height:1px;background:var(--border);margin:14px 0;}
+.ch-connected{display:flex;align-items:center;gap:14px;background:rgba(16,185,129,.06);border:1px solid rgba(16,185,129,.18);border-radius:10px;padding:14px;}
+.ch-av{width:44px;height:44px;border-radius:10px;background:linear-gradient(135deg,var(--p1),var(--b1));display:flex;align-items:center;justify-content:center;font-family:'Syne',sans-serif;font-size:1rem;font-weight:800;color:#fff;flex-shrink:0;}
+.ch-info{flex:1;}
+.ch-name{font-size:.88rem;font-weight:700;margin-bottom:2px;}
+.ch-meta{font-family:'IBM Plex Mono',monospace;font-size:.65rem;color:var(--t2);}
+.ch-badge{display:flex;align-items:center;gap:4px;font-family:'IBM Plex Mono',monospace;font-size:.62rem;font-weight:600;color:var(--green3);}
+.ch-bdot{width:5px;height:5px;border-radius:50%;background:var(--green3);box-shadow:0 0 5px var(--green3);}
+.pref-row{display:flex;align-items:center;justify-content:space-between;padding:10px 0;}
+.pref-row+.pref-row{border-top:1px solid var(--border);}
+.pref-lbl{font-size:.82rem;font-weight:600;margin-bottom:1px;}
+.pref-sub{font-size:.71rem;color:var(--t2);}
+.radio-group{display:flex;gap:6px;}
+.radio-opt{padding:5px 12px;border-radius:7px;cursor:pointer;border:1px solid var(--border);font-size:.76rem;font-weight:600;color:var(--t3);background:rgba(255,255,255,.03);transition:all .15s;}
+.radio-opt:hover{border-color:rgba(109,40,217,.3);color:var(--t2);}
+.radio-opt.sel{border-color:rgba(109,40,217,.4);background:rgba(109,40,217,.12);color:var(--p3);}
+.legal-copy p{font-size:.8rem;line-height:1.75;color:var(--t1);margin:0 0 10px;}
+.legal-copy p:last-child{margin-bottom:0;}
+.legal-list{margin:0 0 10px 18px;padding:0;color:var(--t1);font-size:.8rem;line-height:1.75;}
+.legal-list li+li{margin-top:4px;}
+.legal-last{font-size:.72rem;color:var(--t2);margin-bottom:12px;}
+.legal-foot{font-size:.72rem;color:var(--t3);}
+
+/* TOAST */
+.toast{position:fixed;bottom:34px;right:20px;z-index:999;background:rgba(8,8,30,.97);border:1px solid rgba(109,40,217,.3);border-radius:11px;padding:12px 16px;display:flex;align-items:center;gap:9px;font-size:.8rem;font-weight:500;box-shadow:0 10px 30px rgba(0,0,0,.5),0 0 18px rgba(109,40,217,.1);backdrop-filter:blur(20px);transform:translateY(16px);opacity:0;pointer-events:none;transition:transform .28s ease,opacity .28s ease;max-width:300px;}
+.toast.show{transform:translateY(0);opacity:1;}
+.ti{font-size:.95rem;flex-shrink:0;}
+::-webkit-scrollbar{width:5px;height:5px;}
+::-webkit-scrollbar-track{background:transparent;}
+::-webkit-scrollbar-thumb{background:rgba(255,255,255,.07);border-radius:100px;}
+</style>
+</head>
+<body>
+<div class="orb orb-a"></div>
+<div class="orb orb-b"></div>
+
+<!-- ════════ LOGIN ════════ -->
+<div class="page active" id="pg-login">
+  <div class="login-card">
+    <div class="lc-logo">
+      <div class="lc-mark">
+        <svg width="18" height="18" viewBox="0 0 20 20" fill="none">
+          <path d="M4 16L10 4L16 16" stroke="white" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"/>
+          <path d="M6.5 12H13.5" stroke="white" stroke-width="2" stroke-linecap="round"/>
+        </svg>
+      </div>
+      <span class="lc-name">YTBulkUploader</span>
+      <span class="lc-beta">BETA</span>
+    </div>
+    <h1 class="lc-h">Sign in to<br>start uploading.</h1>
+    <p class="lc-p">Connect your YouTube channel via Google OAuth to access your upload queue and templates.</p>
+    <button class="oauth-btn" id="oauth-btn" onclick="doLogin()">
+      <svg class="g-icon" viewBox="0 0 24 24">
+        <path d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z" fill="#4285F4"/>
+        <path d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z" fill="#34A853"/>
+        <path d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.07H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.93l3.66-2.84z" fill="#FBBC05"/>
+        <path d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z" fill="#EA4335"/>
+      </svg>
+      Continue with Google
+    </button>
+    <p class="lc-note">YTBulkUploader uses the official YouTube Data API v3 and Google OAuth 2.0.<br>We never store your password. Upload permissions only.</p>
+    <div style="display:flex;align-items:center;justify-content:center;gap:10px;margin-top:16px;">
+      <a href="https://discord.gg/yvzMGnW5dE" target="_blank" rel="noopener" style="display:flex;align-items:center;justify-content:center;width:34px;height:34px;border-radius:8px;background:rgba(88,101,242,.1);border:1px solid rgba(88,101,242,.22);color:#7289da;text-decoration:none;transition:background .15s,box-shadow .15s;" onmouseover="this.style.background='rgba(88,101,242,.2)';this.style.boxShadow='0 0 12px rgba(88,101,242,.3)'" onmouseout="this.style.background='rgba(88,101,242,.1)';this.style.boxShadow=''">
+        <svg width="16" height="12" viewBox="0 0 24 18" fill="currentColor"><path d="M20.317 1.492A19.84 19.84 0 0015.971 0c-.186.332-.403.78-.552 1.136a18.343 18.343 0 00-5.49 0A11.738 11.738 0 009.38 0a19.879 19.879 0 00-4.347 1.496C.533 6.093-.32 10.565.099 14.975c1.932 1.44 3.808 2.313 5.652 2.886a14.1 14.1 0 001.226-2.02 13.06 13.06 0 01-1.93-.944c.162-.12.32-.244.474-.372 3.718 1.76 7.764 1.76 11.441 0 .155.128.313.252.475.372-.614.368-1.27.68-1.93.944.35.707.75 1.38 1.226 2.02 1.845-.573 3.72-1.446 5.652-2.886.465-4.933-.789-9.358-3.306-13.483zM8.02 12.278c-1.183 0-2.157-1.105-2.157-2.457 0-1.351.952-2.458 2.157-2.458 1.205 0 2.18 1.107 2.157 2.458 0 1.352-.952 2.457-2.157 2.457zm7.975 0c-1.183 0-2.157-1.105-2.157-2.457 0-1.351.952-2.458 2.157-2.458 1.206 0 2.18 1.107 2.157 2.458 0 1.352-.94 2.457-2.157 2.457z"/></svg>
+      </a>
+      <a href="https://youtube.com/" target="_blank" rel="noopener" style="display:flex;align-items:center;justify-content:center;width:34px;height:34px;border-radius:8px;background:rgba(255,0,0,.08);border:1px solid rgba(255,0,0,.2);color:#ff4444;text-decoration:none;transition:background .15s,box-shadow .15s;" onmouseover="this.style.background='rgba(255,0,0,.15)';this.style.boxShadow='0 0 12px rgba(255,0,0,.2)'" onmouseout="this.style.background='rgba(255,0,0,.08)';this.style.boxShadow=''">
+        <svg width="15" height="11" viewBox="0 0 24 17" fill="currentColor"><path d="M23.495 2.619A3.015 3.015 0 0021.373.468C19.505 0 12 0 12 0S4.495 0 2.627.468A3.015 3.015 0 00.505 2.619C0 4.51 0 8.455 0 8.455s0 3.946.505 5.836a3.015 3.015 0 002.122 2.151C4.495 17 12 17 12 17s7.505 0 9.373-.558a3.015 3.015 0 002.122-2.151C24 12.4 24 8.455 24 8.455s0-3.945-.505-5.836zM9.545 12.023V4.886l6.273 3.568-6.273 3.569z"/></svg>
+      </a>
+      <a href="https://x.com/" target="_blank" rel="noopener" style="display:flex;align-items:center;justify-content:center;width:34px;height:34px;border-radius:8px;background:rgba(255,255,255,.05);border:1px solid rgba(255,255,255,.1);color:#ccc;text-decoration:none;transition:background .15s,box-shadow .15s;" onmouseover="this.style.background='rgba(255,255,255,.1)';this.style.boxShadow='0 0 10px rgba(255,255,255,.08)'" onmouseout="this.style.background='rgba(255,255,255,.05)';this.style.boxShadow=''">
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="currentColor"><path d="M18.244 2.25h3.308l-7.227 8.26 8.502 11.24H16.17l-4.714-6.231-5.401 6.231H2.742l7.73-8.835L1.254 2.25H8.08l4.26 5.632 5.905-5.632zm-1.161 17.52h1.833L7.084 4.126H5.117z"/></svg>
+      </a>
+    </div>
+  </div>
+</div>
+
+<!-- ════════ APP ════════ -->
+<div class="page" id="pg-app" style="display:flex;flex-direction:column;">
+
+  <nav class="topnav">
+    <div class="tn-logo">
+      <div class="tn-mark"><img class="brand-icon" src="/yt-icon.png" alt=""/></div>
+      <span class="tn-name">YTBulkUploader <em>BETA</em></span>
+    </div>
+    <div class="tn-mid">
+      <div class="tn-status">
+        <span class="tn-dot"></span>
+        <span>Connected</span>
+        <span class="tn-sep">·</span>
+        <span id="tn-channel">Not Connected</span>
+      </div>
+    </div>
+    <div class="tn-right">
+      <div class="avatar-pill">
+        <div class="av"><img class="brand-icon" src="/yt-icon.png" alt=""/></div>
+        <span class="av-name">BulkUploader</span>
+      </div>
+    </div>
+  </nav>
+
+  <div class="app-body">
+    <aside class="sidebar">
+      <ul class="snav">
+        <li class="sn active" id="nav-upload" onclick="go('upload')">
+          <span class="sn-ico">⬆</span>Upload Queue
+          <span class="sn-badge" id="badge-q">0</span>
+        </li>
+        <li class="sn" id="nav-templates" onclick="go('templates')">
+          <span class="sn-ico">📋</span>Templates
+        </li>
+        <li class="sn" id="nav-settings" onclick="go('settings')">
+          <span class="sn-ico">⚙</span>Settings
+        </li>
+        <li class="sn sn-sub" id="nav-about" onclick="go('about')">
+          <span class="sn-ico">ℹ</span>About
+        </li>
+        <li class="sn sn-sub" id="nav-privacy" onclick="go('privacy')">
+          <span class="sn-ico">🔒</span>Privacy
+        </li>
+        <li class="sn sn-sub" id="nav-terms" onclick="go('terms')">
+          <span class="sn-ico">📜</span>Terms
+        </li>
+      </ul>
+      <div class="sb-divider"></div>
+      <div class="sb-bottom">
+        <div class="theme-row">
+          <span class="theme-lbl">Theme</span>
+          <div class="theme-dot th-purple active-th" onclick="setTheme('',this)" title="Purple"></div>
+          <div class="theme-dot th-cyan"   onclick="setTheme('cyan',this)"   title="Cyan"></div>
+          <div class="theme-dot th-green"  onclick="setTheme('green',this)"  title="Green"></div>
+          <div class="theme-dot th-red"    onclick="setTheme('red',this)"    title="Red"></div>
+          <div class="theme-dot th-gold"   onclick="setTheme('gold',this)"   title="Gold"></div>
+        </div>
+        <div class="socials-row">
+          <a class="soc-btn discord" href="https://discord.gg/yvzMGnW5dE" target="_blank" rel="noopener" title="Discord">
+            <svg width="15" height="12" viewBox="0 0 24 18" fill="currentColor"><path d="M20.317 1.492A19.84 19.84 0 0015.971 0c-.186.332-.403.78-.552 1.136a18.343 18.343 0 00-5.49 0A11.738 11.738 0 009.38 0a19.879 19.879 0 00-4.347 1.496C.533 6.093-.32 10.565.099 14.975c1.932 1.44 3.808 2.313 5.652 2.886a14.1 14.1 0 001.226-2.02 13.06 13.06 0 01-1.93-.944c.162-.12.32-.244.474-.372 3.718 1.76 7.764 1.76 11.441 0 .155.128.313.252.475.372-.614.368-1.27.68-1.93.944.35.707.75 1.38 1.226 2.02 1.845-.573 3.72-1.446 5.652-2.886.465-4.933-.789-9.358-3.306-13.483zM8.02 12.278c-1.183 0-2.157-1.105-2.157-2.457 0-1.351.952-2.458 2.157-2.458 1.205 0 2.18 1.107 2.157 2.458 0 1.352-.952 2.457-2.157 2.457zm7.975 0c-1.183 0-2.157-1.105-2.157-2.457 0-1.351.952-2.458 2.157-2.458 1.206 0 2.18 1.107 2.157 2.458 0 1.352-.94 2.457-2.157 2.457z"/></svg>
+          </a>
+          <a class="soc-btn youtube" href="https://youtube.com/" target="_blank" rel="noopener" title="YouTube">
+            <svg width="15" height="11" viewBox="0 0 24 17" fill="currentColor"><path d="M23.495 2.619A3.015 3.015 0 0021.373.468C19.505 0 12 0 12 0S4.495 0 2.627.468A3.015 3.015 0 00.505 2.619C0 4.51 0 8.455 0 8.455s0 3.946.505 5.836a3.015 3.015 0 002.122 2.151C4.495 17 12 17 12 17s7.505 0 9.373-.558a3.015 3.015 0 002.122-2.151C24 12.4 24 8.455 24 8.455s0-3.945-.505-5.836zM9.545 12.023V4.886l6.273 3.568-6.273 3.569z"/></svg>
+          </a>
+          <a class="soc-btn twitter" href="https://x.com/" target="_blank" rel="noopener" title="X / Twitter">
+            <svg width="13" height="13" viewBox="0 0 24 24" fill="currentColor"><path d="M18.244 2.25h3.308l-7.227 8.26 8.502 11.24H16.17l-4.714-6.231-5.401 6.231H2.742l7.73-8.835L1.254 2.25H8.08l4.26 5.632 5.905-5.632zm-1.161 17.52h1.833L7.084 4.126H5.117z"/></svg>
+          </a>
+        </div>
+        <button class="sn-logout" onclick="doLogout()">
+          <span>↩</span> Sign Out
+        </button>
+      </div>
+    </aside>
+
+    <main class="main">
+
+      <!-- ─── UPLOAD VIEW ─── -->
+      <div class="view active" id="v-upload">
+        <div class="view-header">
+          <div>
+            <div class="vh-title">Upload Queue</div>
+            <div class="vh-sub">Drop videos, pick a template, then start uploading</div>
+          </div>
+          <div class="vh-right">
+            <button class="btn btn-ghost btn-sm" onclick="addVideo()">＋ Add Videos</button>
+            <button class="btn btn-primary btn-sm" id="start-btn" onclick="startUpload()" disabled>⬆ Start Upload</button>
+          </div>
+        </div>
+
+        <div class="upload-body">
+          <div class="upload-left">
+            <div class="dz-wrap">
+              <div class="dropzone" id="dz" ondragover="dzOver(event)" ondragleave="dzLeave()" ondrop="dzDrop(event)" onclick="addVideo()">
+                <div class="dz-icon">🎬</div>
+                <div class="dz-t">Drop video files here</div>
+                <div class="dz-s">Or click to browse — active template applies automatically</div>
+                <div class="dz-fmts">
+                  <span class="dz-fmt">.mp4</span><span class="dz-fmt">.mkv</span>
+                  <span class="dz-fmt">.mov</span><span class="dz-fmt">.avi</span><span class="dz-fmt">.wmv</span>
+                </div>
+              </div>
+              <!-- Hidden file input used to select real video files. When the user
+                   clicks the drop area or Add Videos button, this input will be
+                   triggered. We handle the change event in handleFiles() below. -->
+              <input id="fileInput" type="file" multiple accept="video/*" style="display:none" onchange="handleFiles(this.files)"/>
+            </div>
+            <div class="q-wrap">
+              <div class="q-head">
+                <div class="q-title">Queue <span class="q-pill" id="q-pill">0</span></div>
+                <button class="q-link" onclick="clearDone()">Clear done</button>
+              </div>
+              <div class="q-list" id="q-list">
+                <div class="q-empty"><div class="qe-icon">📭</div><div class="qe-t">Queue is empty</div><div style="font-size:.76rem;">Drop videos above or click Add Videos</div></div>
+              </div>
+            </div>
+          </div>
+
+          <div class="upload-right">
+            <div class="rp">
+              <div class="rp-lbl">Active Template</div>
+              <div style="position:relative;" id="tmpl-wrap">
+                <button class="tmpl-btn" onclick="toggleTD()">
+                  <span id="tb-ico">🎮</span>
+                  <span id="tb-name">Gaming VODs — Public</span>
+                  <span class="tb-arr">▾</span>
+                </button>
+                <div class="tmpl-drop" id="tmpl-drop"></div>
+              </div>
+            </div>
+            <div class="rp" style="border-top:1px solid var(--border);">
+              <div class="rp-lbl">Session</div>
+              <div class="stats-row">
+                <div class="stat"><div class="stat-v sv-p" id="st-q">0</div><div class="stat-l">QUEUED</div></div>
+                <div class="stat"><div class="stat-v sv-b" id="st-u">0</div><div class="stat-l">UPLOADING</div></div>
+                <div class="stat"><div class="stat-v sv-g" id="st-d">0</div><div class="stat-l">DONE</div></div>
+              </div>
+              <div class="overall" id="ov-wrap" style="display:none;">
+                <div class="ov-head"><span class="ov-label">Overall</span><span class="ov-pct" id="ov-pct">0%</span></div>
+                <div class="ov-bar"><div class="ov-fill" id="ov-fill" style="width:0%"></div></div>
+                <div class="ov-meta"><span id="ov-files">0 of 0</span><span id="ov-spd">—</span></div>
+              </div>
+            </div>
+            <div class="log-section">
+              <div class="log-head">
+                <span class="log-lbl">Activity</span>
+                <button class="log-clr" onclick="clearLog()">CLEAR</button>
+              </div>
+              <div class="log-list" id="log-list"></div>
+            </div>
+          </div>
+        </div>
+
+        <div class="statusbar">
+          <div class="sb-chip ok"><span class="sbc-dot sbc-g"></span>YouTube API</div>
+          <div class="sb-chip" id="sb-status"><span class="sbc-dot sbc-gr"></span>Idle</div>
+          <div class="sb-sp"></div>
+          <div class="sb-chip" style="color:var(--t3);">YTBulkUploader Beta</div>
+        </div>
+      </div>
+
+      <!-- ─── TEMPLATES VIEW ─── -->
+      <div class="view" id="v-templates">
+        <div class="view-header">
+          <div>
+            <div class="vh-title">Templates</div>
+            <div class="vh-sub">Reusable presets — title format, description, tags, privacy, audience</div>
+          </div>
+          <div class="vh-right">
+            <button class="btn btn-primary btn-sm" onclick="newTmpl()">＋ New Template</button>
+          </div>
+        </div>
+        <div class="tmpl-view-body">
+          <div class="tlist-pane">
+            <div class="tlist-head"><span class="tlist-title">Saved</span></div>
+            <div class="tlist" id="tlist"></div>
+          </div>
+          <div class="tedit-pane" id="tedit-pane">
+            <div class="tedit-empty">
+              <div style="font-size:2rem;opacity:.25;">📋</div>
+              <div style="font-family:'Syne',sans-serif;font-size:.9rem;font-weight:700;color:var(--t2);">Select a template to edit</div>
+              <div style="font-size:.76rem;color:var(--t3);">or create a new one above</div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- ─── SETTINGS VIEW ─── -->
+      <div class="view" id="v-settings">
+        <div class="view-header">
+          <div>
+            <div class="vh-title">Settings</div>
+            <div class="vh-sub">Connected channel and upload preferences</div>
+          </div>
+        </div>
+        <div class="settings-body">
+          <div class="set-block">
+            <div class="set-block-title">Connected Channel</div>
+            <div class="set-block-sub">Your YouTube channel linked via Google OAuth 2.0</div>
+            <div class="ch-connected">
+              <div class="ch-av">YT</div>
+              <div class="ch-info">
+                <div class="ch-name">Your Channel</div>
+                <div class="ch-meta">Not connected yet</div>
+              </div>
+              <div class="ch-badge"><span class="ch-bdot"></span>Connection</div>
+            </div>
+            <div class="set-divider"></div>
+            <div style="display:flex;gap:8px;">
+              <button class="btn btn-ghost btn-sm" onclick="toast('🔄','Re-auth flow coming soon')">Re-authenticate</button>
+              <button class="btn btn-danger btn-sm" onclick="doLogout()">Disconnect &amp; Sign Out</button>
+            </div>
+          </div>
+
+          <div class="set-block">
+            <div class="set-block-title">Upload Preferences</div>
+            <div class="set-block-sub">Applied globally on top of your active template</div>
+            <div class="pref-row">
+              <div><div class="pref-lbl">Auto-clean filename as title</div><div class="pref-sub">Converts "my_video_1080p.mp4" → "My Video 1080p"</div></div>
+              <div class="tg-sw on" onclick="this.classList.toggle('on')"></div>
+            </div>
+            <div class="pref-row">
+              <div><div class="pref-lbl">Always mark "Not Made for Kids"</div><div class="pref-sub">Applied to every video regardless of template setting</div></div>
+              <div class="tg-sw on" onclick="this.classList.toggle('on')"></div>
+            </div>
+            <div class="pref-row">
+              <div><div class="pref-lbl">Notify when queue completes</div><div class="pref-sub">Browser notification when all uploads finish</div></div>
+              <div class="tg-sw" onclick="this.classList.toggle('on')"></div>
+            </div>
+            <div class="pref-row">
+              <div><div class="pref-lbl">Upload concurrency</div><div class="pref-sub">Videos uploaded simultaneously (quota applies)</div></div>
+              <div class="radio-group">
+                <div class="radio-opt sel" onclick="pickR(this)">1</div>
+                <div class="radio-opt" onclick="pickR(this)">2</div>
+                <div class="radio-opt" onclick="pickR(this)">3</div>
+              </div>
+            </div>
+          </div>
+
+          <div class="set-block">
+            <div class="set-block-title">Account</div>
+            <div class="set-block-sub">Signed in via Google</div>
+            <div class="pref-row">
+              <div><div class="pref-lbl">Google Account</div><div class="pref-sub"><a href="/cdn-cgi/l/email-protection" class="__cf_email__" data-cfemail="c9a3a6a1a7aabbaca8bdacba89aea4a8a0a5e7aaa6a4">[email&#160;protected]</a></div></div>
+              <button class="btn btn-ghost btn-sm" onclick="doLogout()">Sign Out</button>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- ─── ABOUT VIEW ─── -->
+      <div class="view" id="v-about">
+        <div class="view-header">
+          <div>
+            <div class="vh-title">About</div>
+            <div class="vh-sub">What YT BulkUploader is, safety model, and beta transparency</div>
+          </div>
+        </div>
+        <div class="settings-body legal-copy">
+          <div class="set-block">
+            <div class="set-block-title">About YT BulkUploader (BETA)</div>
+            <div class="set-block-sub">Public beta transparency overview</div>
+          </div>
+
+          <div class="set-block">
+            <div class="set-block-title">What is YT BulkUploader?</div>
+            <p>YT BulkUploader is a web-based tool designed to help YouTube creators upload multiple videos efficiently using the official YouTube Data API v3.</p>
+            <p>The platform allows users to:</p>
+            <ul class="legal-list">
+              <li>Queue multiple videos</li>
+              <li>Apply reusable upload templates</li>
+              <li>Manage upload sessions</li>
+              <li>Reduce repetitive manual upload steps</li>
+            </ul>
+            <p>YT BulkUploader focuses on speed, simplicity, and workflow efficiency for content creators.</p>
+          </div>
+
+          <div class="set-block">
+            <div class="set-block-title">How is it safe?</div>
+            <ul class="legal-list">
+              <li>Official Google OAuth 2.0 - You sign in directly with Google. We never ask for or store your Google password.</li>
+              <li>Official YouTube Data API v3 - All uploads are performed through Google&apos;s official API.</li>
+              <li>Permission-based access - The application only accesses the permissions you explicitly approve.</li>
+              <li>Revoke anytime - You can remove access at any time via your Google Account security settings.</li>
+            </ul>
+            <p>YT BulkUploader does not bypass or automate YouTube outside of Google&apos;s official API framework.</p>
+          </div>
+
+          <div class="set-block">
+            <div class="set-block-title">Do you store my data?</div>
+            <p>We do not store your Google password.</p>
+            <p>Authentication is handled entirely by Google.</p>
+            <p>Access tokens are used only to perform actions requested by the user.</p>
+            <p>Templates and interface settings may be stored locally in your browser or in secure backend storage (if enabled).</p>
+            <p>We do not sell, share, or distribute user data.</p>
+          </div>
+
+          <div class="set-block">
+            <div class="set-block-title">Hosting &amp; Infrastructure</div>
+            <p>YT BulkUploader may be hosted using GitHub-based infrastructure or other secure deployment platforms.</p>
+            <p>Hosting providers are used strictly to serve the application over HTTPS. Authentication and YouTube uploads are handled directly through Google&apos;s secure systems.</p>
+          </div>
+
+          <div class="set-block">
+            <div class="set-block-title">Built with the help of AI tools</div>
+            <p>This project was developed with assistance from modern AI development tools (including ChatGPT and Claude) to accelerate development and improve reliability.</p>
+          </div>
+
+          <div class="set-block">
+            <div class="set-block-title">BETA Notice</div>
+            <p>YT BulkUploader is currently in BETA.</p>
+            <p>Features may change, improve, or be adjusted as the platform evolves. Users may occasionally encounter bugs during this phase.</p>
+            <p>We appreciate feedback to improve stability and performance.</p>
+          </div>
+
+          <div class="set-block">
+            <div class="set-block-title">Contact / Support</div>
+            <p>For support, feedback, or bug reports, please contact the developer or join the community channel linked within the app.</p>
+            <div class="legal-foot">© 2026 YT BulkUploader - BETA</div>
+          </div>
+        </div>
+      </div>
+
+      <!-- ─── PRIVACY VIEW ─── -->
+      <div class="view" id="v-privacy">
+        <div class="view-header">
+          <div>
+            <div class="vh-title">Privacy</div>
+            <div class="vh-sub">Privacy Policy - YT BulkUploader</div>
+          </div>
+        </div>
+        <div class="settings-body legal-copy">
+          <div class="set-block">
+            <div class="set-block-title">Privacy Policy - YT BulkUploader</div>
+            <div class="legal-last">Last updated: February 18, 2026</div>
+          </div>
+
+          <div class="set-block">
+            <div class="set-block-title">1. Information We Collect</div>
+            <p>When you sign in using Google OAuth, we may receive:</p>
+            <ul class="legal-list">
+              <li>Basic profile information (such as email address)</li>
+              <li>Authorization to upload videos to your YouTube channel</li>
+              <li>Access tokens required to perform uploads</li>
+            </ul>
+            <p>We do not collect your Google password.</p>
+          </div>
+
+          <div class="set-block">
+            <div class="set-block-title">2. How We Use Information</div>
+            <p>Information is used solely to:</p>
+            <ul class="legal-list">
+              <li>Authenticate users</li>
+              <li>Upload videos to the user&apos;s YouTube channel</li>
+              <li>Improve application functionality</li>
+            </ul>
+            <p>We do not sell, rent, or share user data with third parties.</p>
+          </div>
+
+          <div class="set-block">
+            <div class="set-block-title">3. Data Storage</div>
+            <p>Passwords are never stored.</p>
+            <p>Access tokens are handled securely.</p>
+            <p>Users may revoke access at any time via Google Account settings.</p>
+          </div>
+
+          <div class="set-block">
+            <div class="set-block-title">4. Third-Party Services</div>
+            <p>YT BulkUploader uses:</p>
+            <ul class="legal-list">
+              <li>Google OAuth 2.0</li>
+              <li>YouTube Data API v3</li>
+            </ul>
+            <p>These services are governed by Google&apos;s Privacy Policy.</p>
+          </div>
+
+          <div class="set-block">
+            <div class="set-block-title">5. Data Deletion</div>
+            <p>Users may request deletion of any stored data by contacting the developer.</p>
+            <p>Users may also revoke Google access directly in their Google Account permissions.</p>
+          </div>
+
+          <div class="set-block">
+            <div class="set-block-title">6. Changes to This Policy</div>
+            <p>This Privacy Policy may be updated as the platform evolves.</p>
+            <div class="legal-foot">© 2026 YT BulkUploader - BETA</div>
+          </div>
+        </div>
+      </div>
+
+      <!-- ─── TERMS VIEW ─── -->
+      <div class="view" id="v-terms">
+        <div class="view-header">
+          <div>
+            <div class="vh-title">Terms</div>
+            <div class="vh-sub">Terms of Service - YT BulkUploader</div>
+          </div>
+        </div>
+        <div class="settings-body legal-copy">
+          <div class="set-block">
+            <div class="set-block-title">Terms of Service - YT BulkUploader</div>
+            <div class="legal-last">Last updated: February 18, 2026</div>
+          </div>
+
+          <div class="set-block">
+            <div class="set-block-title">1. Acceptance of Terms</div>
+            <p>By using YT BulkUploader, you agree to these Terms of Service.</p>
+          </div>
+
+          <div class="set-block">
+            <div class="set-block-title">2. Proper Use</div>
+            <p>Users agree to:</p>
+            <ul class="legal-list">
+              <li>Use the application in compliance with YouTube&apos;s Terms of Service.</li>
+              <li>Upload only content they have the right to publish.</li>
+              <li>Not attempt to abuse API quotas or misuse the platform.</li>
+            </ul>
+          </div>
+
+          <div class="set-block">
+            <div class="set-block-title">3. No Guarantee of Availability</div>
+            <p>As a BETA product:</p>
+            <ul class="legal-list">
+              <li>Service may be interrupted.</li>
+              <li>Features may change.</li>
+              <li>Bugs may occur.</li>
+            </ul>
+            <p>We do not guarantee uninterrupted service.</p>
+          </div>
+
+          <div class="set-block">
+            <div class="set-block-title">4. Limitation of Liability</div>
+            <p>YT BulkUploader is provided &ldquo;as is&rdquo; without warranties of any kind.</p>
+            <p>The developer is not responsible for:</p>
+            <ul class="legal-list">
+              <li>Content uploaded by users</li>
+              <li>YouTube account penalties</li>
+              <li>API quota limitations</li>
+            </ul>
+            <p>Users are responsible for compliance with YouTube&apos;s policies.</p>
+          </div>
+
+          <div class="set-block">
+            <div class="set-block-title">5. Termination</div>
+            <p>We reserve the right to restrict access if the platform is misused.</p>
+          </div>
+
+          <div class="set-block">
+            <div class="set-block-title">6. Changes</div>
+            <p>These Terms may be updated over time.</p>
+            <div class="legal-foot">© 2026 YT BulkUploader - BETA</div>
+          </div>
+        </div>
+      </div>
+
+    </main>
+  </div>
+</div>
+
+<!-- TOAST -->
+<div class="toast" id="toast-el">
+  <span class="ti" id="t-ico">✓</span>
+  <span id="t-msg">Done</span>
+</div>
+
+<script data-cfasync="false" src="/cdn-cgi/scripts/5c5dd728/cloudflare-static/email-decode.min.js"></script>
+<!-- Load Google's OAuth 2.0 client library for browser-based authentication -->
+<script src="https://accounts.google.com/gsi/client" async defer></script>
+<script>
+/* ── STATE ── */
+const S = {
+  uploading: false,
+  view: 'upload',
+  activeTmpl: 0,
+  editingTmpl: null,
+  videos: [],
+  templates: [
+    {id:0,icon:'🎮',name:'Gaming VODs — Public',   privacy:'Public',  title:'{filename}',       desc:'Gaming content.\n\n#gaming #vods #gameplay', tags:'gaming, vods, gameplay', kids:true},
+    {id:1,icon:'🎯',name:'Ranked Clips — Unlisted',privacy:'Unlisted',title:'[Ranked] {filename}',desc:'Ranked gameplay clip.',                       tags:'ranked, clips, gaming', kids:true},
+    {id:2,icon:'📦',name:'Raw Footage — Private',  privacy:'Private', title:'{filename}',       desc:'',                                             tags:'',               kids:true},
+  ],
+};
+const FAKE=[
+  {n:'valorant_ranked_clutch_1v5.mp4',s:'2.3 GB',c:'tc1',i:'🎮'},
+  {n:'fortnite_solos_16kill_win.mp4', s:'1.8 GB',c:'tc2',i:'🏆'},
+  {n:'apex_20kill_ranked_game.mkv',   s:'2.0 GB',c:'tc4',i:'⚡'},
+  {n:'minecraft_speedrun_any.mkv',    s:'3.1 GB',c:'tc3',i:'⛏️'},
+  {n:'warzone_squad_wipe_final.mp4',  s:'0.9 GB',c:'tc5',i:'🔫'},
+];
+const EXTRA=[
+  {n:'csgo_ace_round_faceit.mp4',    s:'0.8 GB',c:'tc1',i:'💥'},
+  {n:'overwatch2_team_wipe.mkv',     s:'2.1 GB',c:'tc2',i:'🎯'},
+  {n:'elden_ring_malenia_nohit.mov', s:'1.6 GB',c:'tc3',i:'⚔️'},
+  {n:'gta_online_heist_final.mp4',   s:'3.0 GB',c:'tc4',i:'🚗'},
+];
+let eidx=0,vid=100,tmplId=10;
+
+// Provide your Google OAuth 2.0 access token here. Without a valid token,
+// uploads will not work. See the docs for obtaining an access token with
+// YouTube upload permissions and paste it below.
+// Your Google OAuth 2.0 Client ID. Replace this with your own client ID from
+// the Google Cloud Console (https://console.cloud.google.com/apis/credentials).
+// IMPORTANT: Remove any leading/trailing whitespace from the ID. The example
+// below uses a placeholder ID from your `.env.local` file.
+const CLIENT_ID = '1050024629118-kk2nad2o6vsvd9o6un901n0q9pdma0tq.apps.googleusercontent.com';
+
+const SESSION_STORAGE_KEY = 'ytbu.session.v1';
+const SESSION_TTL_MS = 24 * 60 * 60 * 1000; // 24 hours
+const TOKEN_REFRESH_SKEW_MS = 2 * 60 * 1000; // refresh before hard expiry
+
+// OAuth token state
+let TOKEN = '';
+let TOKEN_EXPIRES_AT = 0;
+let tokenClient = null;
+let tokenRequestPromise = null;
+
+function setTokenState(tokenResponse){
+  TOKEN = tokenResponse?.access_token || '';
+  const expiresInSec = Number(tokenResponse?.expires_in || 3600);
+  TOKEN_EXPIRES_AT = Date.now() + (Math.max(30, expiresInSec) * 1000);
+}
+function clearTokenState(){
+  TOKEN = '';
+  TOKEN_EXPIRES_AT = 0;
+}
+function isTokenFresh(){
+  return !!TOKEN && Date.now() < (TOKEN_EXPIRES_AT - TOKEN_REFRESH_SKEW_MS);
+}
+function saveSessionMarker(){
+  try {
+    localStorage.setItem(
+      SESSION_STORAGE_KEY,
+      JSON.stringify({ rememberUntil: Date.now() + SESSION_TTL_MS })
+    );
+  } catch (_e) {}
+}
+function clearSessionMarker(){
+  try { localStorage.removeItem(SESSION_STORAGE_KEY); } catch (_e) {}
+}
+function hasValidSessionMarker(){
+  try {
+    const raw = localStorage.getItem(SESSION_STORAGE_KEY);
+    if (!raw) return false;
+    const parsed = JSON.parse(raw);
+    const until = Number(parsed?.rememberUntil || 0);
+    if (!until || Date.now() > until) {
+      clearSessionMarker();
+      return false;
+    }
+    return true;
+  } catch (_e) {
+    clearSessionMarker();
+    return false;
+  }
+}
+function setConnectedUI(connected){
+  const loginPage = document.getElementById('pg-login');
+  const appPage = document.getElementById('pg-app');
+  if (connected) {
+    loginPage.classList.remove('active');
+    appPage.classList.add('active');
+  } else {
+    appPage.classList.remove('active');
+    loginPage.classList.add('active');
+  }
+  const ch = document.getElementById('tn-channel');
+  if (ch) ch.textContent = connected ? 'Connected' : 'Not Connected';
+}
+function ensureTokenClient(){
+  if (tokenClient) return tokenClient;
+  tokenClient = google.accounts.oauth2.initTokenClient({
+    client_id: CLIENT_ID,
+    scope: 'https://www.googleapis.com/auth/youtube.upload',
+    callback: () => {},
+  });
+  return tokenClient;
+}
+function waitForGoogleOAuth(timeoutMs = 10000){
+  if (window.google && google.accounts && google.accounts.oauth2) return Promise.resolve();
+  return new Promise((resolve, reject) => {
+    const start = Date.now();
+    const timer = setInterval(() => {
+      if (window.google && google.accounts && google.accounts.oauth2) {
+        clearInterval(timer);
+        resolve();
+        return;
+      }
+      if (Date.now() - start > timeoutMs) {
+        clearInterval(timer);
+        reject(new Error('Google OAuth library did not load in time'));
+      }
+    }, 100);
+  });
+}
+async function requestToken(promptValue){
+  await waitForGoogleOAuth();
+  return new Promise((resolve, reject) => {
+    const client = ensureTokenClient();
+    let settled = false;
+    const finish = (fn, payload) => {
+      if (settled) return;
+      settled = true;
+      clearTimeout(timer);
+      fn(payload);
+    };
+    const timer = setTimeout(() => {
+      finish(reject, new Error('Authorization timed out'));
+    }, promptValue ? 30000 : 8000);
+    client.callback = (tokenResponse) => {
+      if (!tokenResponse || tokenResponse.error) {
+        const msg = tokenResponse?.error_description || tokenResponse?.error || 'Authorization failed';
+        finish(reject, new Error(msg));
+        return;
+      }
+      finish(resolve, tokenResponse);
+    };
+    client.error_callback = (errorResponse) => {
+      const msg = errorResponse?.message || errorResponse?.type || 'Authorization failed';
+      finish(reject, new Error(msg));
+    };
+    client.requestAccessToken({ prompt: promptValue });
+  });
+}
+async function ensureValidToken(options = {}){
+  const interactive = !!options.interactive;
+  if (isTokenFresh()) return TOKEN;
+  if (!tokenRequestPromise) {
+    tokenRequestPromise = (async () => {
+      try {
+        const tokenResponse = await requestToken(interactive ? 'consent' : '');
+        setTokenState(tokenResponse);
+        saveSessionMarker();
+        return TOKEN;
+      } finally {
+        tokenRequestPromise = null;
+      }
+    })();
+  }
+  return tokenRequestPromise;
+}
+function clearSessionState(){
+  clearTokenState();
+  clearSessionMarker();
+}
+function afterAuthSuccess(){
+  setConnectedUI(true);
+  renderQueue();
+  renderTD();
+  renderTList();
+  updateStats();
+  go(getInitialView());
+}
+async function restoreSessionIfPossible(){
+  if (!hasValidSessionMarker()) return;
+  // If the user has an active local session marker, restore the app shell
+  // immediately so navigation from legal pages does not force a login screen.
+  afterAuthSuccess();
+  log('info', 'Session restored');
+  try {
+    await ensureValidToken({ interactive: false });
+  } catch (_e) {
+    // Keep the user in the app shell; request interactive auth only when
+    // they perform an action that requires a fresh token (e.g. upload).
+    clearTokenState();
+    log('warn', 'Token refresh needed before next upload');
+  }
+}
+// Colour classes and emoji icons for queue thumbnails. Each new video picks the next
+// colour and icon based on its index to add visual variety. Feel free to adjust or
+// expand these arrays to suit your preferences.
+const COLORS = ['tc1','tc2','tc3','tc4','tc5'];
+const ICONS  = ['🎬','🎧','🎮','📹','🎯'];
+
+const cleanName=n=>n.replace(/\.(mp4|mkv|mov|avi|wmv)$/i,'').replace(/[_\-]/g,' ').replace(/\b\w/g,c=>c.toUpperCase());
+function esc(s){return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');}
+function getDisplayTitle(v){return (v.customTitle&&v.customTitle.trim())?v.customTitle.trim():cleanName(v.n);}
+const pc=p=>p==='Public'?'pub':p==='Unlisted'?'unl':'pri';
+const tmpl=id=>S.templates.find(t=>t.id===id);
+const at=()=>tmpl(S.activeTmpl)||S.templates[0];
+const VIEWS = ['upload','templates','settings','about','privacy','terms'];
+function getInitialView(){
+  const fromHash = (window.location.hash || '').replace('#','').trim().toLowerCase();
+  const fromQuery = new URLSearchParams(window.location.search).get('view');
+  const candidate = (fromHash || (fromQuery || '').toLowerCase());
+  return VIEWS.includes(candidate) ? candidate : 'upload';
+}
+
+/* ── LOGIN / LOGOUT ── */
+async function doLogin(){
+  const btn = document.getElementById('oauth-btn');
+  const prevText = btn?.innerHTML;
+  if (btn) {
+    btn.innerHTML = 'Signing in...';
+    btn.disabled = true;
+  }
+  try {
+    await ensureValidToken({ interactive: true });
+    afterAuthSuccess();
+    log('info', 'Signed in via Google');
+    toast('✓', 'Signed in via Google');
+  } catch (err) {
+    clearSessionState();
+    setConnectedUI(false);
+    log('err', err?.message || 'Authorization failed');
+    toast('⚠', 'Authorization failed');
+  } finally {
+    if (btn) {
+      btn.innerHTML = prevText || 'Continue with Google';
+      btn.disabled = false;
+    }
+  }
+}
+
+function doLogout(){
+  if (S.uploading) { toast('⚠','Stop upload before signing out'); return; }
+  const revokeToken = TOKEN;
+  clearSessionState();
+  if (revokeToken && window.google && google.accounts && google.accounts.oauth2 && google.accounts.oauth2.revoke) {
+    try { google.accounts.oauth2.revoke(revokeToken, () => {}); } catch (_e) {}
+  }
+  S.videos = [];
+  S.uploading = false;
+  S.editingTmpl = null;
+  renderQueue();
+  updateStats();
+  setConnectedUI(false);
+}
+
+/* ── NAVIGATION ── */
+function go(v){
+  document.querySelectorAll('.sn').forEach(e=>e.classList.remove('active'));
+  const nav = document.getElementById('nav-'+v);
+  if (nav) nav.classList.add('active');
+  document.querySelectorAll('.view').forEach(e=>e.classList.remove('active'));
+  const view = document.getElementById('v-'+v);
+  if (view) view.classList.add('active');
+  S.view=v;
+  if (typeof window !== 'undefined' && window.location.hash !== '#'+v) {
+    window.history.replaceState(null, '', '#'+v);
+  }
+}
+
+/* ── QUEUE RENDER ── */
+function renderQueue(){
+  const list=document.getElementById('q-list');
+  const n=S.videos.length;
+  document.getElementById('q-pill').textContent=n;
+  document.getElementById('badge-q').textContent=n;
+  if(!n){
+    list.innerHTML='<div class="q-empty"><div class="qe-icon">📭</div><div class="qe-t">Queue is empty</div><div style="font-size:.76rem;">Drop videos above or click Add Videos</div></div>';
+    document.getElementById('start-btn').disabled=true;return;
+  }
+  const t=at();
+  list.innerHTML=S.videos.map(v=>{
+    const priv=v.priv||t.privacy;
+    const displayTitle=getDisplayTitle(v);
+    const prog=(v.st==='uploading'||v.st==='done')?`<div class="vprog"><div class="vpb"><div class="vpbf${v.st==='done'?' done':''}" id="pb-${v.id}" style="width:${v.pct}%"></div></div><span class="vpct" id="pc-${v.id}">${v.pct}%</span><span class="vspd" id="ps-${v.id}">${v.st==='uploading'?(Math.random()*6+10).toFixed(1)+' MB/s':''}</span></div>`:'';
+    const badge=v.st==='queued'?'<span class="stbadge stb-q"><span class="std"></span>QUEUED</span>':v.st==='uploading'?'<span class="stbadge stb-u"><span class="std"></span>UPLOADING</span>':v.st==='done'?'<span class="stbadge stb-d"><span class="std"></span>DONE</span>':'<span class="stbadge stb-e"><span class="std"></span>ERROR</span>';
+    return `<div class="vrow st-${v.st}" id="vr-${v.id}">
+      <div class="vrow-main">
+        <div class="vthumb ${v.c}">${v.i}</div>
+        <div class="vinfo">
+          <div class="vname" ondblclick="startEditTitle(${v.id})" title="Double-click to edit title">${esc(displayTitle)}</div>
+          <div class="vmeta"><span>${v.s}</span><span class="vm-sep">·</span><span>${esc(displayTitle.substring(0,34))}${displayTitle.length>34?'…':''}</span></div>
+        </div>
+        <div class="vrow-right">
+          <div class="priv-wrap">
+            <select class="priv-sel ${pc(priv)}" onchange="setP(${v.id},this)">
+              <option${priv==='Public'?' selected':''}>Public</option>
+              <option${priv==='Unlisted'?' selected':''}>Unlisted</option>
+              <option${priv==='Private'?' selected':''}>Private</option>
+            </select>
+            <span class="priv-arr">▾</span>
+          </div>
+          ${badge}
+          ${(v.st==='queued'||v.st==='done')?`<button class="vrem" onclick="remV(${v.id})" title="${v.st==='done'?'Remove from list':'Remove from queue'}">✕</button>`:''}
+        </div>
+      </div>
+      ${prog}
+      <div class="vtags">
+        <span class="vtag vt-title">✎ ${esc(displayTitle.substring(0,26))}${displayTitle.length>26?'…':''}</span>
+        <span class="vtag vt-kids">✓ Not for kids</span>
+        <span class="vtag vt-tmpl">${t.icon} ${t.name.split('—')[0].trim()}</span>
+      </div>
+    </div>`;
+  }).join('');
+  document.getElementById('start-btn').disabled=S.uploading||!S.videos.some(v=>v.st==='queued');
+}
+
+function setP(id,sel){const v=S.videos.find(x=>x.id===id);if(v){v.priv=sel.value;sel.className=`priv-sel ${pc(sel.value)}`;}}
+function remV(id){S.videos=S.videos.filter(x=>x.id!==id);renderQueue();updateStats();log('warn','Removed video from queue');}
+function startEditTitle(id){
+  const v=S.videos.find(x=>x.id===id);if(!v)return;
+  const row=document.getElementById('vr-'+id);if(!row)return;
+  const vnameEl=row.querySelector('.vname');if(!vnameEl)return;
+  const current=getDisplayTitle(v);
+  const input=document.createElement('input');
+  input.type='text';
+  input.className='vname-edit';
+  input.value=current;
+  input.maxLength=100;
+  input.placeholder='Video title';
+  vnameEl.replaceWith(input);
+  input.focus();input.select();
+  input.onblur=function(){
+    v.customTitle=input.value.trim()||null;
+    renderQueue();
+    if(v.customTitle)log('info','Title updated');
+  };
+  input.onkeydown=function(e){
+    if(e.key==='Enter'){e.preventDefault();input.blur();}
+    if(e.key==='Escape'){v.customTitle=null;renderQueue();}
+  };
+}
+function clearDone(){S.videos=S.videos.filter(v=>v.st!=='done');renderQueue();updateStats();log('info','Cleared completed videos');}
+
+/* ── ADD VIDEOS ── */
+function addVideo(){
+  // Instead of adding a dummy entry, trigger the hidden file input so the
+  // user can pick actual videos from their device. The selected files
+  // will be processed by handleFiles().
+  const input = document.getElementById('fileInput');
+  if (input) input.click();
+}
+function dzOver(e){e.preventDefault();document.getElementById('dz').classList.add('over');}
+function dzLeave(){document.getElementById('dz').classList.remove('over');}
+// Removed original dzDrop implementation. See new dzDrop below which handles actual file uploads.
+/* ── HANDLE FILES ── */
+function handleFiles(files){
+  if (!files || !files.length) return;
+  for (let i = 0; i < files.length; i++) {
+    const file = files[i];
+    // Keep the original filename (including extension) so the queue displays exactly what was selected from disk.
+    const idVal = vid++;
+    const fname = file.name;
+    const sizeMB = (file.size / (1024 * 1024)).toFixed(1) + ' MB';
+    // Rotate through predefined colour classes and icons to vary the appearance.
+    const color = COLORS[idVal % COLORS.length];
+    const icon = ICONS[idVal % ICONS.length];
+    S.videos.push({
+      id: idVal,
+      n: fname,
+      s: sizeMB,
+      c: color,
+      i: icon,
+      file: file,
+      st: 'queued',
+      pct: 0,
+      priv: null,
+      customTitle: null
+    });
+    toast('＋', fname.substring(0, 36));
+  }
+  renderQueue();
+  updateStats();
+  log('info', `${files.length} file(s) added`);
+}
+
+/* Override drop handling to process real files instead of adding dummy entries */
+function dzDrop(e){
+  e.preventDefault();
+  document.getElementById('dz').classList.remove('over');
+  if(e.dataTransfer && e.dataTransfer.files && e.dataTransfer.files.length){
+    handleFiles(e.dataTransfer.files);
+  }
+}
+
+/* ── UPLOAD ── */
+async function startUpload(){
+  if (S.uploading) return;
+  try {
+    await ensureValidToken({ interactive: true });
+  } catch (_e) {
+    clearSessionState();
+    toast('⚠','Google session expired. Please sign in again.');
+    log('err', 'Unable to start upload: auth required');
+    return;
+  }
+  S.uploading = true;
+  document.getElementById('start-btn').disabled = true;
+  document.getElementById('ov-wrap').style.display = 'block';
+  setSB(true);
+  log('info', `Session started — ${S.videos.filter(v=>v.st==='queued').length} queued`);
+  // Start the real upload loop
+  uploadNext();
+}
+function nextVid(){
+  const v=S.videos.find(x=>x.st==='queued');
+  if(!v){done();return;}
+  v.st='uploading';v.pct=0;
+  renderQueue();updateStats();log('info',`Uploading: ${v.n}`);
+  let p=0;
+  const iv=setInterval(()=>{
+    p+=Math.random()*3.2+0.8;if(p>=100)p=100;
+    v.pct=Math.round(p);
+    const pb=document.getElementById(`pb-${v.id}`);
+    const pc2=document.getElementById(`pc-${v.id}`);
+    const ps=document.getElementById(`ps-${v.id}`);
+    if(pb)pb.style.width=v.pct+'%';
+    if(pc2)pc2.textContent=v.pct+'%';
+    if(ps)ps.textContent=p<100?(Math.random()*6+10).toFixed(1)+' MB/s':'';
+    updateOverall();
+    if(p>=100){clearInterval(iv);v.st='done';renderQueue();updateStats();log('ok',`✓ Done: ${v.n}`);setTimeout(nextVid,400);}
+  },110);
+}
+
+/*
+ * Upload the next video in the queue.
+ *
+ * This function looks for the first video with status 'queued' and sets it to
+ * 'uploading'. It then constructs a FormData payload with the video file and
+ * desired privacy setting and posts it to the server API at `/api/upload`.
+ * A progress simulation runs while the network request is in flight to give
+ * visual feedback. On success, the video status is set to 'done' and its
+ * progress bar is filled; on error, the status becomes 'error'. After
+ * finishing the current video (success or error) the function calls itself
+ * recursively to continue uploading the remaining queued videos. When no
+ * queued videos remain, the `done()` function is called to finalise the
+ * session.
+ */
+async function uploadNext(){
+  const v = S.videos.find(x => x.st === 'queued');
+  if (!v) { done(); return; }
+
+  try {
+    await ensureValidToken({ interactive: false });
+  } catch (_e) {
+    clearSessionState();
+    S.uploading = false;
+    setSB(false);
+    document.getElementById('start-btn').disabled = false;
+    log('warn', 'Session expired. Click Start Upload to continue.');
+    toast('WARN', 'Session expired. Click Start Upload to continue.');
+    return;
+  }
+
+  if (!v.file) {
+    v.pct = 0;
+    v.st = 'error';
+    renderQueue();
+    updateStats();
+    log('err', `Missing file handle: ${v.n}`);
+    setTimeout(uploadNext, 400);
+    return;
+  }
+
+  v.st = 'uploading';
+  v.pct = 0;
+  renderQueue();
+  updateStats();
+  log('info', `Uploading: ${v.n}`);
+
+  const formData = new FormData();
+  formData.append('files', v.file);
+  formData.append('privacy', v.priv || at().privacy);
+  const uploadTitle = getDisplayTitle(v).slice(0, 100);
+  formData.append('title', uploadTitle);
+
+  const xhr = new XMLHttpRequest();
+  let lastLoaded = 0, lastTime = Date.now();
+
+  xhr.upload.addEventListener('progress', function(e) {
+    if (!e.lengthComputable) return;
+    const pct = Math.round((e.loaded / e.total) * 100);
+    v.pct = Math.min(pct, 99);
+    const pb = document.getElementById(`pb-${v.id}`);
+    const pc = document.getElementById(`pc-${v.id}`);
+    const ps = document.getElementById(`ps-${v.id}`);
+    if (pb) pb.style.width = v.pct + '%';
+    if (pc) pc.textContent = v.pct + '%';
+    if (ps) {
+      const now = Date.now();
+      const dt = (now - lastTime) / 1000;
+      if (dt >= 0.5) {
+        const mb = (e.loaded - lastLoaded) / (1024 * 1024);
+        ps.textContent = (mb / dt).toFixed(1) + ' MB/s';
+        lastLoaded = e.loaded;
+        lastTime = now;
+      }
+    }
+    updateOverall();
+  });
+
+  xhr.addEventListener('load', async function() {
+    let result = {};
+    try { result = JSON.parse(xhr.responseText || '{}'); } catch (_) {}
+
+    if (xhr.status >= 200 && xhr.status < 300 && result && result.ok) {
+      v.pct = 100;
+      v.st = 'done';
+      v.file = null; // release file handle after successful upload
+      if (Array.isArray(result.results) && result.results[0] && result.results[0].videoId) {
+        v.videoId = result.results[0].videoId;
+        log('info', `Video uploaded: ${v.videoId}`);
+      }
+      renderQueue();
+      updateStats();
+      log('ok', `Done: ${v.n}`);
+      setTimeout(uploadNext, 400);
+      return;
+    }
+
+    const errMsg = (result && result.error) ? result.error : xhr.statusText;
+    const errText = String(errMsg || '').toLowerCase();
+    const authFailed = xhr.status === 401 || errText.includes('invalid credentials') || errText.includes('unauthorized');
+
+    if (authFailed) {
+      clearTokenState();
+      v.pct = 0;
+      v.st = 'queued';
+      renderQueue();
+      updateStats();
+      try {
+        await ensureValidToken({ interactive: false });
+        log('warn', `Token refreshed, retrying: ${v.n}`);
+        setTimeout(uploadNext, 300);
+      } catch (_e) {
+        clearSessionState();
+        S.uploading = false;
+        setSB(false);
+        document.getElementById('start-btn').disabled = false;
+        log('err', 'Google auth expired. Click Start Upload to sign in again.');
+        toast('WARN', 'Google auth expired. Click Start Upload to continue.');
+      }
+      return;
+    }
+
+    v.pct = 0;
+    v.st = 'error';
+    renderQueue();
+    updateStats();
+    log('err', `Error uploading ${v.n}: ${errMsg}`);
+    toast('WARN', `Error uploading ${v.n}`);
+    setTimeout(uploadNext, 400);
+  });
+
+  xhr.addEventListener('error', function() {
+    v.pct = 0;
+    v.st = 'error';
+    renderQueue();
+    updateStats();
+    log('err', `Error uploading ${v.n}: network error`);
+    toast('WARN', `Error uploading ${v.n}`);
+    setTimeout(uploadNext, 400);
+  });
+
+  xhr.addEventListener('abort', function() {
+    v.pct = 0;
+    v.st = 'error';
+    renderQueue();
+    updateStats();
+    log('warn', `Upload aborted: ${v.n}`);
+    setTimeout(uploadNext, 400);
+  });
+
+  xhr.open('POST', '/api/upload');
+  xhr.setRequestHeader('Authorization', 'Bearer ' + TOKEN);
+  xhr.send(formData);
+}
+
+function done(){
+  S.uploading = false;
+  setSB(false);
+  renderQueue();
+  log('ok', 'All uploads complete');
+  toast('OK', 'All uploads complete!');
+  updateStats();
+}
+function setSB(on){
+  const e = document.getElementById('sb-status');
+  e.className = `sb-chip${on?' act':''}`;
+  e.innerHTML = `<span class="sbc-dot ${on?'sbc-b':'sbc-gr'}"></span>${on?'Uploading...':'Idle'}`;
+}
+
+/* ── STATS ── */
+function updateStats(){
+  document.getElementById('st-q').textContent=S.videos.filter(v=>v.st==='queued').length;
+  document.getElementById('st-u').textContent=S.videos.filter(v=>v.st==='uploading').length;
+  document.getElementById('st-d').textContent=S.videos.filter(v=>v.st==='done').length;
+  updateOverall();
+}
+function updateOverall(){
+  const tot=S.videos.length;if(!tot)return;
+  const d=S.videos.filter(v=>v.st==='done').length;
+  const u=S.videos.find(v=>v.st==='uploading');
+  const ov=Math.round(((d*100)+(u?u.pct:0))/tot);
+  document.getElementById('ov-pct').textContent=ov+'%';
+  document.getElementById('ov-fill').style.width=ov+'%';
+  document.getElementById('ov-files').textContent=`${d} of ${tot} done`;
+  document.getElementById('ov-spd').textContent=S.uploading?(Math.random()*6+10).toFixed(1)+' MB/s':'—';
+}
+
+/* ── TEMPLATE DROPDOWN ── */
+function renderTD(){
+  const d=document.getElementById('tmpl-drop');
+  d.innerHTML=S.templates.map(t=>`<div class="td-item${t.id===S.activeTmpl?' sel':''}" onclick="selTmpl(${t.id})"><span class="tdi-ico">${t.icon}</span><div><div class="tdi-name">${t.name}</div><div class="tdi-sub">${t.privacy} · ${t.tags.split(',')[0]||'no tags'}</div></div>${t.id===S.activeTmpl?'<span class="tdi-chk">✓</span>':''}</div>`).join('')
+    +'<div class="td-manage" onclick="go(\'templates\');closeTD()">⚙ Manage Templates</div>';
+}
+function toggleTD(){
+  const d=document.getElementById('tmpl-drop');const w=document.getElementById('tmpl-wrap');
+  const o=d.classList.contains('open');d.classList.toggle('open',!o);w.classList.toggle('tmpl-open',!o);
+}
+function closeTD(){document.getElementById('tmpl-drop').classList.remove('open');document.getElementById('tmpl-wrap').classList.remove('tmpl-open');}
+function selTmpl(id){
+  S.activeTmpl=id;const t=tmpl(id);
+  document.getElementById('tb-ico').textContent=t.icon;
+  document.getElementById('tb-name').textContent=t.name;
+  closeTD();renderTD();renderQueue();log('info',`Template: ${t.name}`);
+}
+document.addEventListener('click',e=>{if(!e.target.closest('#tmpl-wrap'))closeTD();});
+
+/* ── TEMPLATES PAGE ── */
+function renderTList(){
+  document.getElementById('tlist').innerHTML=S.templates.map(t=>`
+    <div class="tlist-item${t.id===S.editingTmpl?' active':''}" onclick="editTmpl(${t.id})">
+      <span class="tli-ico">${t.icon}</span>
+      <div class="tli-info"><div class="tli-name">${t.name}</div><div class="tli-priv">${t.privacy}</div></div>
+      <button class="tli-del" onclick="event.stopPropagation();delTmpl(${t.id})">✕</button>
+    </div>`).join('');
+}
+function newTmpl(){
+  const t={id:tmplId++,icon:'⚡',name:'New Template',privacy:'Public',title:'{filename}',desc:'',tags:'',kids:true};
+  S.templates.push(t);renderTList();renderTD();editTmpl(t.id);toast('📋','New template created');
+}
+function delTmpl(id){
+  if(S.templates.length<=1){toast('⚠','Need at least one template');return;}
+  S.templates=S.templates.filter(t=>t.id!==id);
+  if(S.activeTmpl===id)S.activeTmpl=S.templates[0].id;
+  if(S.editingTmpl===id){S.editingTmpl=null;document.getElementById('tedit-pane').innerHTML='<div class="tedit-empty"><div style="font-size:2rem;opacity:.25;">📋</div><div style="font-family:\'Syne\',sans-serif;font-size:.9rem;font-weight:700;color:var(--t2);">Select a template to edit</div></div>';}
+  renderTList();renderTD();toast('🗑','Template deleted');
+}
+function editTmpl(id){
+  S.editingTmpl=id;const t=tmpl(id);renderTList();
+  const pane=document.getElementById('tedit-pane');
+  const mkPO=(p,label,cls)=>`<div class="priv-opt ${cls}${t.privacy===p?' active':''}" onclick="setTP(${id},'${p}',this)">${p==='Public'?'🌐':p==='Unlisted'?'🔗':'🔒'} ${label}</div>`;
+  pane.innerHTML=`
+    <div class="tedit-head">
+      <span class="tedit-title">${t.icon} ${t.name}</span>
+      <div style="display:flex;gap:8px;">
+        <button class="btn btn-ghost btn-sm" onclick="cancelEdit()">Cancel</button>
+        <button class="btn btn-primary btn-sm" onclick="saveTmpl(${id})">Save</button>
+      </div>
+    </div>
+    <div class="tedit-body">
+      <div class="form-section">
+        <div class="form-sec-lbl">Identity</div>
+        <div class="form-grid">
+          <div class="fg">
+            <label class="fl">Template Name</label>
+            <input class="fi" id="f-name" value="${t.name}" placeholder="e.g. Gaming VODs — Public"/>
+          </div>
+          <div class="fg">
+            <label class="fl">Icon</label>
+            <input class="fi" id="f-icon" value="${t.icon}" placeholder="🎮" style="max-width:80px;"/>
+          </div>
+        </div>
+      </div>
+      <div class="form-section">
+        <div class="form-sec-lbl">Video Metadata</div>
+        <div class="form-grid">
+          <div class="fg full">
+            <label class="fl">Title Format</label>
+            <input class="fi" id="f-title" value="${t.title}" placeholder="{filename}"/>
+            <div class="fhint">Use {filename} for auto-cleaned filename</div>
+          </div>
+          <div class="fg full">
+            <label class="fl">Default Description</label>
+            <textarea class="fi fi-ta" id="f-desc" placeholder="Default description for all videos in this template…">${t.desc}</textarea>
+          </div>
+          <div class="fg full">
+            <label class="fl">Tags</label>
+            <input class="fi" id="f-tags" value="${t.tags}" placeholder="gaming, vods, gameplay"/>
+            <div class="fhint">Comma-separated — applied to every video using this template</div>
+          </div>
+        </div>
+      </div>
+      <div class="form-section">
+        <div class="form-sec-lbl">Privacy Default</div>
+        <div class="priv-group" id="pg-${id}">
+          ${mkPO('Public','Public','po-pub')}${mkPO('Unlisted','Unlisted','po-unl')}${mkPO('Private','Private','po-pri')}
+        </div>
+        <div class="fhint" style="margin-top:6px;">Can be overridden per-video in the upload queue</div>
+      </div>
+      <div class="form-section">
+        <div class="form-sec-lbl">Audience</div>
+        <div class="toggle-row">
+          <div class="tg-info">
+            <div class="tg-lbl">Not Made for Kids</div>
+            <div class="tg-sub">Marks every video using this template as not directed at children</div>
+          </div>
+          <div class="tg-sw${t.kids?' on':''}" id="sw-kids-${id}" onclick="this.classList.toggle('on')"></div>
+        </div>
+      </div>
+    </div>`;
+}
+
+function setTP(id,p,el){
+  const t=tmpl(id);if(!t)return;t.privacy=p;
+  const pg=document.getElementById('pg-'+id);if(!pg)return;
+  pg.querySelectorAll('.priv-opt').forEach(e=>e.classList.remove('active'));
+  el.classList.add('active');
+}
+function cancelEdit(){
+  S.editingTmpl=null;renderTList();
+  document.getElementById('tedit-pane').innerHTML='<div class="tedit-empty"><div style="font-size:2rem;opacity:.25;">📋</div><div style="font-family:\'Syne\',sans-serif;font-size:.9rem;font-weight:700;color:var(--t2);">Select a template to edit</div></div>';
+}
+function saveTmpl(id){
+  const t=tmpl(id);if(!t)return;
+  t.name=document.getElementById('f-name')?.value||t.name;
+  t.icon=document.getElementById('f-icon')?.value||t.icon;
+  t.title=document.getElementById('f-title')?.value||t.title;
+  t.desc=document.getElementById('f-desc')?.value||'';
+  t.tags=document.getElementById('f-tags')?.value||'';
+  t.kids=document.getElementById(`sw-kids-${id}`)?.classList.contains('on')??true;
+  renderTList();renderTD();
+  document.getElementById('tedit-pane').querySelector('.tedit-title').textContent=`${t.icon} ${t.name}`;
+  toast('✓',`"${t.name}" saved`);log('info',`Template saved: ${t.name}`);
+  if(S.activeTmpl===id){document.getElementById('tb-ico').textContent=t.icon;document.getElementById('tb-name').textContent=t.name;}
+}
+
+/* ── SETTINGS HELPERS ── */
+function pickR(el){el.closest('.radio-group').querySelectorAll('.radio-opt').forEach(e=>e.classList.remove('sel'));el.classList.add('sel');}
+
+/* ── LOG ── */
+function log(type,msg){
+  const t=new Date().toTimeString().substring(0,8);
+  const el=document.getElementById('log-list');
+  const d=document.createElement('div');d.className='log-e';
+  const cls=type==='ok'?'ok':type==='warn'?'warn':type==='err'?'err':'info';
+  d.innerHTML=`<span class="le-t">${t}</span><span class="le-m ${cls}">${msg}</span>`;
+  el.prepend(d);
+}
+function clearLog(){document.getElementById('log-list').innerHTML='';}
+
+/* ── THEME ── */
+const THEMES=['','cyan','green','red','gold'];
+function setTheme(name,el){
+  // remove all theme classes
+  THEMES.forEach(t=>{ if(t) document.body.classList.remove('theme-'+t); });
+  if(name) document.body.classList.add('theme-'+name);
+  // update active dot
+  document.querySelectorAll('.theme-dot').forEach(d=>d.classList.remove('active-th'));
+  if(el && el.classList) el.classList.add('active-th');
+  // update orb colours via class (CSS handles it)
+  // rebuild orb inline styles to pick up new CSS vars
+  const orbA=document.querySelector('.orb-a');
+  const orbB=document.querySelector('.orb-b');
+  if(orbA) orbA.style.animation='none', setTimeout(()=>orbA.style.animation='',10);
+  toast('🎨','Theme changed');
+}
+
+/* ── TOAST ── */
+let tTO;
+function toast(ico,msg){
+    const e=document.getElementById('toast-el');
+  document.getElementById('t-ico').textContent=ico;
+  document.getElementById('t-msg').textContent=msg;
+  e.classList.add('show');
+  clearTimeout(tTO);
+  tTO=setTimeout(()=>e.classList.remove('show'),3000);
+}
+
+restoreSessionIfPossible();
+</script>
+</body>
+</html>
